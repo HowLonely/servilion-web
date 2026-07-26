@@ -152,3 +152,36 @@
     scrollbar-color: var(--border) transparent;
   }
 }
+/* Impresión de etiquetas desde un diálogo.
+   Radix monta el diálogo en un portal, pero el resto de la página sigue en el
+   DOM: sin esto, imprimir sacaría también el menú lateral y el fondo oscuro del
+   overlay. Se oculta todo y se deja visible solo el área marcada. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 0;
+  }
+  /* El diálogo deja de flotar: en papel es una hoja normal. */
+  [data-slot="dialog-content"] {
+    position: static !important;
+    max-height: none !important;
+    max-width: none !important;
+    overflow: visible !important;
+    transform: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+  [data-slot="dialog-overlay"] {
+    display: none !important;
+  }
+}

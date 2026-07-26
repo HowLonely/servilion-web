@@ -142,7 +142,10 @@ export function WorkersTable() {
               <TableRow key={worker.id}>
                 <TableCell className="font-medium">{worker.full_name}</TableCell>
                 <TableCell>{worker.badge_code}</TableCell>
-                <TableCell>{worker.camp || "—"}</TableCell>
+                <TableCell>
+                  {worker.camp_name || "—"}
+                  {worker.room_number ? ` · ${worker.room_number}` : ""}
+                </TableCell>
                 <TableCell>{worker.shift || "—"}</TableCell>
                 <TableCell>{worker.position || "—"}</TableCell>
                 <TableCell>

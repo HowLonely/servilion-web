@@ -15,6 +15,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { useAuth } from "@/lib/auth/auth-provider";
+import { landingPathForRole } from "@/components/layout/nav-config";
 import { parseApiError } from "@/lib/api/errors";
 import {
   loginSchema,
@@ -37,8 +38,10 @@ export function LoginForm() {
 
   async function onSubmit(values: LoginFormValues) {
     try {
-      await login(values.username, values.password);
-      router.push(searchParams.get("next") ?? "/");
+      const user = await login(values.username, values.password);
+      // Sin `next` se rutea por rol: un digitador no ve el Panel, así que
+      // mandarlo a "/" lo dejaría en una página vacía.
+      router.push(searchParams.get("next") ?? landingPathForRole(user.role));
     } catch (error) {
       toast.error(parseApiError(error).detail);
     }

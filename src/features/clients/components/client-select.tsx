@@ -17,11 +17,13 @@ export function ClientSelect({
   onChange,
   placeholder = "Selecciona un cliente",
   includeAllOption,
+  disabled,
 }: {
   value: number | undefined;
   onChange: (clientId: number | undefined) => void;
   placeholder?: string;
   includeAllOption?: string;
+  disabled?: boolean;
 }) {
   const { data: page, isLoading } = useClients({
     is_active: true,
@@ -35,7 +37,7 @@ export function ClientSelect({
       onValueChange={(next: string) =>
         onChange(next === "__all__" ? undefined : Number(next))
       }
-      disabled={isLoading}
+      disabled={disabled || isLoading}
     >
       <SelectTrigger>
         <SelectValue placeholder={placeholder} />

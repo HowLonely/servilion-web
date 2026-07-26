@@ -31,6 +31,8 @@ import {
 } from "@/components/ui/select";
 import { applyServerErrors, parseApiError } from "@/lib/api/errors";
 import { CompanySelect } from "@/features/companies/components/company-select";
+import { useCompany } from "@/features/companies/hooks/use-companies";
+import { RoomSelect } from "@/features/camps/components/room-select";
 import {
   useCreateWorker,
   useUpdateWorker,
@@ -51,8 +53,7 @@ function defaultValuesFor(worker?: WorkerOut): WorkerFormValues {
     badge_code: worker?.badge_code ?? "",
     full_name: worker?.full_name ?? "",
     national_id: worker?.national_id ?? "",
-    camp: worker?.camp ?? "",
-    room: worker?.room ?? "",
+    current_room_id: worker?.current_room_id ?? null,
     shift: worker?.shift ?? "",
     position: worker?.position ?? "",
     area: worker?.area ?? "",
@@ -85,6 +86,11 @@ export function WorkerFormDialog({
     resolver: zodResolver(workerSchema),
     defaultValues: defaultValuesFor(worker),
   });
+
+  // El cliente sale de la empresa elegida: acota los camps a su faena y
+  // evita asignarle al trabajador una pieza de otro cliente.
+  const companyId = watch("company_id");
+  const { data: company } = useCompany(companyId > 0 ? companyId : undefined);
 
   useEffect(() => {
     if (open) reset(defaultValuesFor(worker));
@@ -147,16 +153,17 @@ export function WorkerFormDialog({
                 <FieldError errors={[errors.national_id]} />
               </FieldContent>
             </Field>
-            <Field orientation="responsive">
+            <Field>
+              <FieldLabel>Campamento y habitación</FieldLabel>
               <FieldContent>
-                <FieldLabel htmlFor="camp">Campamento</FieldLabel>
-                <Input id="camp" {...register("camp")} />
-                <FieldError errors={[errors.camp]} />
-              </FieldContent>
-              <FieldContent>
-                <FieldLabel htmlFor="room">Habitación</FieldLabel>
-                <Input id="room" {...register("room")} />
-                <FieldError errors={[errors.room]} />
+                <RoomSelect
+                  value={watch("current_room_id")}
+                  onChange={(roomId) =>
+                    setValue("current_room_id", roomId)
+                  }
+                  clientId={company?.client_id}
+                />
+                <FieldError errors={[errors.current_room_id]} />
               </FieldContent>
             </Field>
             <Field orientation="responsive">

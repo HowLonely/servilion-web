@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { formatDateTime } from "@/lib/date";
 import { parseApiError } from "@/lib/api/errors";
 import { useAuth } from "@/lib/auth/auth-provider";
+import { canRunFieldFlow } from "@/components/layout/nav-config";
 import {
   useCleanReception,
   useRegisterDelivery,
@@ -25,19 +26,20 @@ type LaundryOrderOut = components["schemas"]["LaundryOrderOut"];
 // al ingresar la guía, no es una acción manual.)
 export function OrderFlowActions({ order }: { order: LaundryOrderOut }) {
   const { user } = useAuth();
-  const role = user?.role ?? "";
-  const can = (...roles: string[]) => role === "ADMIN" || roles.includes(role);
+  // Ambos hitos ocurren en faena y los ejecuta el supervisor: los digitadores
+  // trabajan en planta y no intervienen aquí.
+  const canRunFlow = canRunFieldFlow(user?.role);
 
   // Repetible: si la guía salió incompleta y la prenda faltante viaja después
   // en un envío aparte, cada llegada física a faena se marca por separado.
   const showCleanReception =
     (order.status === "COMPLETADA" || order.status === "INCOMPLETA") &&
-    can("SUPERVISOR");
+    canRunFlow;
   const showDelivery =
     order.delivery_flow !== "FLUJO_2" &&
     order.status === "COMPLETADA" &&
     order.clean_receptions.length > 0 &&
-    can("SUPERVISOR", "DESPACHO");
+    canRunFlow;
 
   if (!showCleanReception && !showDelivery) return null;
 
