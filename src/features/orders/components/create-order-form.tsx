@@ -147,7 +147,7 @@ export function CreateOrderForm() {
           {worker && (
             <p className="text-sm text-muted-foreground">
               {company?.name ?? "..."} · Turno {worker.shift || "—"} · Pieza{" "}
-              {worker.room || "—"}
+              {worker.room_number || "—"}
             </p>
           )}
         </BigField>

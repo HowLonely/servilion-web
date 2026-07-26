@@ -93,8 +93,9 @@ export function OrderDetailView({ orderId }: { orderId: number }) {
                   ? order.company_name
                   : `Cliente: ${order.client_name} · Empresa: ${order.company_name}`}{" "}
                 · RUT: {worker?.national_id || "—"} · Código:{" "}
-                {worker?.badge_code ?? "—"} · Campamento: {worker?.camp || "—"} ·
-                Pieza: {worker?.room || "—"} · Turno: {order.shift || "—"}
+                {worker?.badge_code ?? "—"} · Campamento:{" "}
+                {order.camp_name || "—"} · Pieza:{" "}
+                {order.room_number || "—"} · Turno: {order.shift || "—"}
               </p>
               {order.observations && (
                 <p className="mt-2 whitespace-pre-line text-muted-foreground">

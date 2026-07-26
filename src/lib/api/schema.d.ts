@@ -274,6 +274,83 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/camps/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Camps */
+        get: operations["camps_api_list_camps"];
+        put?: never;
+        /** Create Camp */
+        post: operations["camps_api_create_camp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/camps/{camp_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Camp */
+        get: operations["camps_api_get_camp"];
+        /** Update Camp */
+        put: operations["camps_api_update_camp"];
+        post?: never;
+        /** Deactivate Camp */
+        delete: operations["camps_api_deactivate_camp"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rooms/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Rooms */
+        get: operations["camps_api_list_rooms"];
+        put?: never;
+        /**
+         * Create Room
+         * @description El `qr_code` lo genera el servidor; se imprime y se pega en la puerta.
+         */
+        post: operations["camps_api_create_room"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rooms/{room_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Room */
+        get: operations["camps_api_get_room"];
+        /** Update Room */
+        put: operations["camps_api_update_room"];
+        post?: never;
+        /** Deactivate Room */
+        delete: operations["camps_api_deactivate_room"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/": {
         parameters: {
             query?: never;
@@ -364,7 +441,7 @@ export interface paths {
         };
         /**
          * List Sync Conflicts
-         * @description Cambios de la app móvil descartados por antigüedad, para revisión del supervisor.
+         * @description Cambios de la app móvil descartados por antigüedad, para revisión del administrador.
          */
         get: operations["orders_api_list_sync_conflicts"];
         put?: never;
@@ -662,6 +739,30 @@ export interface paths {
         put?: never;
         /** Confirm Photo Upload */
         post: operations["orders_api_confirm_photo_upload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/delivery/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm Delivery
+         * @description Registra la entrega del morral tras escanear la OT y el QR de la puerta.
+         *
+         *     409 significa que la puerta escaneada no es el destino de la guía: la app
+         *     debe mostrar ambas habitaciones y reenviar con `confirm_different_room` si
+         *     el operador confirma que el trabajador se mudó.
+         */
+        post: operations["orders_delivery_api_confirm_delivery"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1056,10 +1157,14 @@ export interface components {
             full_name: string;
             /** National Id */
             national_id: string;
-            /** Camp */
-            camp: string;
-            /** Room */
-            room: string;
+            /** Current Room Id */
+            current_room_id: number | null;
+            /** Room Number */
+            room_number: string;
+            /** Camp Id */
+            camp_id: number | null;
+            /** Camp Name */
+            camp_name: string;
             /** Shift */
             shift: string;
             /** Position */
@@ -1084,16 +1189,8 @@ export interface components {
              * @default
              */
             national_id: string;
-            /**
-             * Camp
-             * @default
-             */
-            camp: string;
-            /**
-             * Room
-             * @default
-             */
-            room: string;
+            /** Current Room Id */
+            current_room_id?: number | null;
             /**
              * Shift
              * @default
@@ -1139,6 +1236,79 @@ export interface components {
             code: string;
             /** Name */
             name: string;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+        };
+        /** CampOut */
+        CampOut: {
+            /** Id */
+            id: number;
+            /** Client Id */
+            client_id: number;
+            /** Client Name */
+            client_name: string;
+            /** Name */
+            name: string;
+            /** Is Active */
+            is_active: boolean;
+            /** Rooms Count */
+            rooms_count: number;
+        };
+        /** PagedCampOut */
+        PagedCampOut: {
+            /** Items */
+            items: components["schemas"]["CampOut"][];
+            /** Count */
+            count: number;
+        };
+        /** CampIn */
+        CampIn: {
+            /** Client Id */
+            client_id: number;
+            /** Name */
+            name: string;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+        };
+        /** PagedRoomOut */
+        PagedRoomOut: {
+            /** Items */
+            items: components["schemas"]["RoomOut"][];
+            /** Count */
+            count: number;
+        };
+        /** RoomOut */
+        RoomOut: {
+            /** Id */
+            id: number;
+            /** Camp Id */
+            camp_id: number;
+            /** Camp Name */
+            camp_name: string;
+            /** Client Id */
+            client_id: number;
+            /** Number */
+            number: string;
+            /**
+             * Qr Code
+             * Format: uuid
+             */
+            qr_code: string;
+            /** Is Active */
+            is_active: boolean;
+        };
+        /** RoomIn */
+        RoomIn: {
+            /** Camp Id */
+            camp_id: number;
+            /** Number */
+            number: string;
             /**
              * Is Active
              * @default true
@@ -1225,6 +1395,12 @@ export interface components {
             reference: string;
             /** Control Code */
             control_code: string;
+            /** Delivery Room Id */
+            delivery_room_id: number | null;
+            /** Room Number */
+            room_number: string;
+            /** Camp Name */
+            camp_name: string;
             /** Photo Url */
             photo_url: string | null;
             /** Billed Amount */
@@ -1325,6 +1501,8 @@ export interface components {
              * @default
              */
             control_code: string;
+            /** Delivery Room Id */
+            delivery_room_id?: number | null;
             /**
              * Items
              * @default []
@@ -1534,6 +1712,8 @@ export interface components {
              * @default
              */
             control_code: string;
+            /** Delivery Room Id */
+            delivery_room_id?: number | null;
             /**
              * Items
              * @default []
@@ -1744,6 +1924,72 @@ export interface components {
         PhotoConfirmIn: {
             /** Object Key */
             object_key: string;
+        };
+        /** DeliveryConfirmOut */
+        DeliveryConfirmOut: {
+            order: components["schemas"]["LaundryOrderOut"];
+            scanned_room: components["schemas"]["DeliveryRoomOut"];
+            expected_room: components["schemas"]["DeliveryRoomOut"] | null;
+            /** Room Matched */
+            room_matched: boolean;
+            /**
+             * Delivered At
+             * Format: date-time
+             */
+            delivered_at: string;
+        };
+        /** DeliveryRoomOut */
+        DeliveryRoomOut: {
+            /** Id */
+            id: number;
+            /** Number */
+            number: string;
+            /** Camp Name */
+            camp_name: string;
+            /**
+             * Qr Code
+             * Format: uuid
+             */
+            qr_code: string;
+        };
+        /**
+         * DeliveryMismatchOut
+         * @description 409: el QR escaneado no es la habitación de destino de la guía.
+         */
+        DeliveryMismatchOut: {
+            /** Detail */
+            detail: string;
+            scanned_room: components["schemas"]["DeliveryRoomOut"];
+            expected_room: components["schemas"]["DeliveryRoomOut"] | null;
+        };
+        /**
+         * DeliveryConfirmIn
+         * @description Payload del doble escaneo que hace la app al dejar el morral.
+         *
+         *     `order_code` es lo que va impreso en la etiqueta/boleta (n° de OT, `ref` o
+         *     código de control, indistintamente). `room_qr` es el UUID pegado en la
+         *     puerta.
+         */
+        DeliveryConfirmIn: {
+            /** Order Code */
+            order_code: string;
+            /**
+             * Room Qr
+             * Format: uuid
+             */
+            room_qr: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /** Delivered At */
+            delivered_at?: string | null;
+            /**
+             * Confirm Different Room
+             * @default false
+             */
+            confirm_different_room: boolean;
         };
         /** OperationsSummaryOut */
         OperationsSummaryOut: {
@@ -2592,6 +2838,243 @@ export interface operations {
             };
         };
     };
+    camps_api_list_camps: {
+        parameters: {
+            query?: {
+                client_id?: number | null;
+                search?: string | null;
+                is_active?: boolean | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedCampOut"];
+                };
+            };
+        };
+    };
+    camps_api_create_camp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampIn"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampOut"];
+                };
+            };
+        };
+    };
+    camps_api_get_camp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                camp_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampOut"];
+                };
+            };
+        };
+    };
+    camps_api_update_camp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                camp_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampOut"];
+                };
+            };
+        };
+    };
+    camps_api_deactivate_camp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                camp_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    camps_api_list_rooms: {
+        parameters: {
+            query?: {
+                camp_id?: number | null;
+                client_id?: number | null;
+                search?: string | null;
+                is_active?: boolean | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedRoomOut"];
+                };
+            };
+        };
+    };
+    camps_api_create_room: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoomIn"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoomOut"];
+                };
+            };
+        };
+    };
+    camps_api_get_room: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                room_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoomOut"];
+                };
+            };
+        };
+    };
+    camps_api_update_room: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                room_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoomIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoomOut"];
+                };
+            };
+        };
+    };
+    camps_api_deactivate_room: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                room_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     orders_api_list_orders: {
         parameters: {
             query?: {
@@ -3190,6 +3673,57 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LaundryOrderOut"];
+                };
+            };
+        };
+    };
+    orders_delivery_api_confirm_delivery: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeliveryConfirmIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryConfirmOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryMismatchOut"];
                 };
             };
         };

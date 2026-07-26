@@ -99,7 +99,7 @@ export function WorkerSelect({
                   <div className="flex flex-col">
                     <span>{worker.full_name}</span>
                     <span className="text-xs text-muted-foreground">
-                      {worker.badge_code} · {worker.camp || "Sin campamento"}
+                      {worker.badge_code} · {worker.camp_name || "Sin camp"}
                     </span>
                   </div>
                 </CommandItem>

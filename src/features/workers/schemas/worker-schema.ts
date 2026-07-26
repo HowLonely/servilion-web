@@ -16,8 +16,9 @@ export const workerSchema = z.object({
   badge_code: z.string().min(1, "El código/credencial es obligatorio."),
   full_name: z.string().min(1, "El nombre es obligatorio."),
   national_id: z.string(),
-  camp: z.string(),
-  room: z.string(),
+  // Reemplaza a los antiguos `camp`/`room` de texto libre: ahora apunta a una
+  // habitación real, que es lo que la app móvil escanea al entregar.
+  current_room_id: z.number().nullable(),
   shift: z.string(),
   position: z.string(),
   area: z.string(),

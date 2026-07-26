@@ -20,7 +20,8 @@ type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 type AuthContextValue = {
   user: UserOut | null;
   status: AuthStatus;
-  login: (username: string, password: string) => Promise<void>;
+  /** Devuelve el usuario autenticado para poder rutear según su rol. */
+  login: (username: string, password: string) => Promise<UserOut>;
   logout: () => Promise<void>;
 };
 
@@ -69,6 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAccessToken(data.access);
     setUser(data.user);
     setStatus("authenticated");
+    return data.user as UserOut;
   }, []);
 
   const logout = useCallback(async () => {
