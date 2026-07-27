@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   PackageCheck,
   Shirt,
+  Tent,
   TriangleAlert,
   Users,
   type LucideIcon,
@@ -14,18 +15,73 @@ import {
 
 export type StaffRole =
   | "ADMIN"
-  | "RECEPCION"
-  | "LAVANDERIA"
-  | "DESPACHO"
-  | "SUPERVISOR";
+  | "SUPERVISOR"
+  | "DIGITADOR_OT"
+  | "DIGITADOR_EMPAQUE";
 
 export const ROLE_LABELS: Record<string, string> = {
   ADMIN: "Administrador",
-  RECEPCION: "Recepción",
-  LAVANDERIA: "Lavandería",
-  DESPACHO: "Despacho",
   SUPERVISOR: "Supervisor",
+  DIGITADOR_OT: "Digitador de OT",
+  DIGITADOR_EMPAQUE: "Digitador de Empaque",
 };
+
+// --- Capacidades ---
+//
+// ESTAS CONSTANTES SON LA ÚNICA FUENTE DE VERDAD de los permisos en el cliente.
+// Los ítems de navegación de más abajo las referencian en vez de repetir listas
+// de roles a mano, y los componentes que habilitan acciones (`packing-station`,
+// `packing-panel`, `order-flow-actions`) importan los helpers `canX` de aquí.
+//
+// Antes cada archivo llevaba su propia lista y se desincronizaron: el menú
+// ofrecía "Digitalizar OT" a LAVANDERIA y "Empaque" a SUPERVISOR, y ambos
+// recibían 403 al intentar la acción. Si vuelve a hacer falta una lista de
+// roles, se agrega aquí y se importa; no se copia.
+//
+// Debe reflejar exactamente lo que exige el backend (decoradores
+// `@require_roles` / `@require_admin`; ADMIN atraviesa toda restricción):
+//
+//   POST /api/orders/                        → DIGITADOR_OT, SUPERVISOR
+//   POST /api/orders/{id}/packing/scan       → DIGITADOR_EMPAQUE, SUPERVISOR
+//   POST /api/orders/{id}/packing/finish     → DIGITADOR_EMPAQUE, SUPERVISOR
+//   POST /api/orders/{id}/incomplete/resolve → DIGITADOR_EMPAQUE, SUPERVISOR
+//   POST /api/orders/{id}/clean-reception    → SUPERVISOR
+//   POST /api/orders/{id}/deliver            → SUPERVISOR
+//   clientes · empresas · trabajadores · prendas · facturación · conflictos → ADMIN
+
+/** Digitalizar la OT física al recibir la ropa sucia. */
+export const DIGITIZE_ROLES: StaffRole[] = ["ADMIN", "SUPERVISOR", "DIGITADOR_OT"];
+
+/** Pistolear y validar el morral limpio al empacarlo. */
+export const PACKING_ROLES: StaffRole[] = [
+  "ADMIN",
+  "SUPERVISOR",
+  "DIGITADOR_EMPAQUE",
+];
+
+/** Hitos físicos en faena: recepción del morral limpio y entrega en habitación. */
+export const FIELD_FLOW_ROLES: StaffRole[] = ["ADMIN", "SUPERVISOR"];
+
+/** Vista general de la operación: panel, listado de OT y torre de control. */
+export const OPERATIONS_ROLES: StaffRole[] = ["ADMIN", "SUPERVISOR"];
+
+/** Catálogo y dinero. Es lo único que separa a ADMIN de SUPERVISOR. */
+export const ADMIN_ROLES: StaffRole[] = ["ADMIN"];
+
+function hasRole(role: string | undefined, allowed: StaffRole[]): boolean {
+  return role !== undefined && allowed.includes(role as StaffRole);
+}
+
+export const canDigitize = (role: string | undefined): boolean =>
+  hasRole(role, DIGITIZE_ROLES);
+
+export const canPack = (role: string | undefined): boolean =>
+  hasRole(role, PACKING_ROLES);
+
+export const canRunFieldFlow = (role: string | undefined): boolean =>
+  hasRole(role, FIELD_FLOW_ROLES);
+
+// --- Navegación ---
 
 export type NavItem = {
   href: string;
@@ -50,6 +106,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Panel",
         icon: LayoutDashboard,
         description: "Resumen operativo del día",
+        roles: OPERATIONS_ROLES,
       },
     ],
   },
@@ -61,20 +118,21 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Órdenes de trabajo",
         icon: ClipboardList,
         description: "Órdenes de lavado y su estado",
+        roles: OPERATIONS_ROLES,
       },
       {
         href: "/orders/new",
         label: "Digitalizar OT",
         icon: FilePlus2,
         description: "Digitalizar la OT al recibir ropa sucia en Antofagasta",
-        roles: ["ADMIN", "SUPERVISOR", "RECEPCION", "LAVANDERIA"],
+        roles: DIGITIZE_ROLES,
       },
       {
         href: "/packing",
         label: "Empaque y revisión",
         icon: PackageCheck,
         description: "Pistolear cada prenda del morral limpio y validar completitud",
-        roles: ["ADMIN", "SUPERVISOR", "LAVANDERIA", "DESPACHO"],
+        roles: PACKING_ROLES,
       },
     ],
   },
@@ -86,7 +144,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Torre de control",
         icon: GaugeCircle,
         description: "Estado operativo en tiempo real y cuellos de botella",
-        roles: ["ADMIN", "SUPERVISOR"],
+        roles: OPERATIONS_ROLES,
       },
     ],
   },
@@ -98,28 +156,35 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Clientes",
         icon: Contact,
         description: "Clientes y su catálogo de precios (agrupan empresas)",
-        roles: ["ADMIN", "SUPERVISOR"],
+        roles: ADMIN_ROLES,
       },
       {
         href: "/companies",
         label: "Empresas",
         icon: Building2,
         description: "Empresas de cada cliente",
-        roles: ["ADMIN", "SUPERVISOR"],
+        roles: ADMIN_ROLES,
+      },
+      {
+        href: "/camps",
+        label: "Campamentos",
+        icon: Tent,
+        description: "Alojamiento de la faena y códigos QR de las puertas",
+        roles: ADMIN_ROLES,
       },
       {
         href: "/workers",
         label: "Trabajadores",
         icon: Users,
         description: "Personal en faena",
-        roles: ["ADMIN", "SUPERVISOR", "RECEPCION"],
+        roles: ADMIN_ROLES,
       },
       {
         href: "/garments",
         label: "Prendas",
         icon: Shirt,
         description: "Catálogo de tipos de prenda (el precio se define por cliente)",
-        roles: ["ADMIN", "SUPERVISOR"],
+        roles: ADMIN_ROLES,
       },
     ],
   },
@@ -131,7 +196,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Conflictos de sincronización",
         icon: TriangleAlert,
         description: "Divergencias entre la app en terreno y el servidor",
-        roles: ["ADMIN", "SUPERVISOR"],
+        roles: ADMIN_ROLES,
       },
     ],
   },
@@ -152,4 +217,16 @@ export function findActiveNavItem(pathname: string): NavItem | undefined {
   );
   // El match más específico (href más largo) gana.
   return matches.sort((a, b) => b.href.length - a.href.length)[0];
+}
+
+/**
+ * Primera pantalla a la que mandar al usuario tras iniciar sesión.
+ *
+ * Los digitadores no ven el Panel, así que enviarlos a "/" los dejaría en una
+ * página vacía: se les manda directo a su estación. Se resuelve desde la propia
+ * navegación para que un cambio de permisos arrastre también el destino.
+ */
+export function landingPathForRole(role: string | undefined): string {
+  const firstVisible = NAV_ITEMS.find((item) => isNavItemVisible(item, role));
+  return firstVisible?.href ?? "/";
 }

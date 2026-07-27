@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { parseApiError } from "@/lib/api/errors";
 import { useAuth } from "@/lib/auth/auth-provider";
+import { canPack as roleCanPack } from "@/components/layout/nav-config";
 import { OrderNumberLabel } from "@/features/orders/components/order-number-label";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
 import { PackingPanel } from "@/features/orders/components/packing-panel";
@@ -24,7 +25,6 @@ type LaundryOrderOut = components["schemas"]["LaundryOrderOut"];
 // planta (post-digitalización y antes de despacharse). Coincide con las etapas
 // en que `PackingPanel` habilita el pistoleo.
 const PACKING_STAGES = ["RECIBIDA", "EN_REVISION", "INCOMPLETA"];
-const PACKING_ROLES = ["ADMIN", "LAVANDERIA", "DESPACHO"];
 
 /**
  * Estación de empaque y revisión (paso 6 del flujo). Como la vista de
@@ -34,7 +34,7 @@ const PACKING_ROLES = ["ADMIN", "LAVANDERIA", "DESPACHO"];
  */
 export function PackingStation() {
   const { user } = useAuth();
-  const canPack = PACKING_ROLES.includes(user?.role ?? "");
+  const canPack = roleCanPack(user?.role);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [code, setCode] = useState("");
@@ -115,8 +115,8 @@ export function PackingStation() {
 
       {!canPack && (
         <p className="text-base text-muted-foreground">
-          Tu rol no puede validar el empaque. Esta estación es para Lavandería y
-          Despacho.
+          Tu rol no puede validar el empaque. Esta estación es para el Digitador
+          de Empaque y el Supervisor.
         </p>
       )}
 

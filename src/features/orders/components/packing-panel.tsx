@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDateTime } from "@/lib/date";
 import { parseApiError } from "@/lib/api/errors";
 import { useAuth } from "@/lib/auth/auth-provider";
+import { canPack as roleCanPack } from "@/components/layout/nav-config";
 import { RESOLUTION_TYPE_LABELS } from "@/features/orders/lib/status";
 import {
   useFinishPacking,
@@ -36,8 +37,7 @@ type PackingItemProgressOut = components["schemas"]["PackingItemProgressOut"];
 // resuelve directo como "Encontrada" — no hay un formulario aparte para eso.
 export function PackingPanel({ order }: { order: LaundryOrderOut }) {
   const { user } = useAuth();
-  const role = user?.role ?? "";
-  const canPack = ["ADMIN", "LAVANDERIA", "DESPACHO"].includes(role);
+  const canPack = roleCanPack(user?.role);
   const isPackingStage = ["RECIBIDA", "EN_REVISION", "INCOMPLETA"].includes(
     order.status,
   );
