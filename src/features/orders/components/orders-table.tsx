@@ -44,21 +44,20 @@ export function OrdersTable({ filters }: { filters: OrderFilters }) {
               <TableHead>Recepción</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead>Prendas</TableHead>
-              <TableHead>Cobrado</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading &&
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={9}>
+                  <TableCell colSpan={8}>
                     <Skeleton className="h-6 w-full" />
                   </TableCell>
                 </TableRow>
               ))}
             {!isLoading && error && (
               <TableRow>
-                <TableCell colSpan={9} className="text-center text-destructive">
+                <TableCell colSpan={8} className="text-center text-destructive">
                   No se pudieron cargar las OT.
                 </TableCell>
               </TableRow>
@@ -66,7 +65,7 @@ export function OrdersTable({ filters }: { filters: OrderFilters }) {
             {!isLoading && !error && orders?.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={9}
+                  colSpan={8}
                   className="text-center text-muted-foreground"
                 >
                   No se encontraron OT en el rango seleccionado.
@@ -96,11 +95,6 @@ export function OrdersTable({ filters }: { filters: OrderFilters }) {
                   <OrderStatusBadge status={order.status} />
                 </TableCell>
                 <TableCell>{order.garment_count}</TableCell>
-                <TableCell>
-                  {order.billed_amount !== null
-                    ? `$${order.billed_amount.toLocaleString("es-CL")}`
-                    : "—"}
-                </TableCell>
               </TableRow>
             ))}
           </TableBody>

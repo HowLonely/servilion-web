@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { dateInputDaysAgo } from "@/lib/date";
 import { CompanySelect } from "@/features/companies/components/company-select";
+import { OperationsAging } from "@/features/reports/components/operations-aging";
 import { OperationsKpiCards } from "@/features/reports/components/operations-kpi-cards";
 import { OperationsStatusFunnel } from "@/features/reports/components/operations-status-funnel";
 import { OperationsTimeseries } from "@/features/reports/components/operations-timeseries";
@@ -33,18 +34,19 @@ function LiveBadge({ isFetching }: { isFetching: boolean }) {
 
 export function OperationsDashboard() {
   const [companyId, setCompanyId] = useState<number | undefined>(undefined);
-  // Rango solo para la serie temporal; el estado actual (KPIs, embudo,
-  // atascadas) es siempre "ahora", sin filtro de fecha, para no ocultar guías
+  // El período acota las métricas de FLUJO (ingresadas/producidas/turnaround) y
+  // la serie diaria. La foto de planta (en planta, atascadas, aging) es siempre
+  // "ahora": la calcula el backend sin filtro de fecha, para no ocultar guías
   // viejas que llevan tiempo estancadas.
   const [dateFrom, setDateFrom] = useState(dateInputDaysAgo(30));
   const [dateTo, setDateTo] = useState(dateInputDaysAgo(0));
 
-  const summary = useOperationsSummary(companyId);
+  const summary = useOperationsSummary(companyId, dateFrom, dateTo);
   const timeseries = useOperationsTimeseries(companyId, dateFrom, dateTo);
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Filtros: empresa (dimensión principal) + rango para la tendencia. */}
+      {/* Filtros: empresa (dimensión principal) + período para flujo y serie. */}
       <Card className="flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-end">
         <div className="flex flex-col gap-1.5 sm:w-64">
           <Label>Empresa</Label>
@@ -56,9 +58,9 @@ export function OperationsDashboard() {
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="ts_from">Tendencia desde</Label>
+          <Label htmlFor="period_from">Período desde</Label>
           <Input
-            id="ts_from"
+            id="period_from"
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
@@ -66,9 +68,9 @@ export function OperationsDashboard() {
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="ts_to">Tendencia hasta</Label>
+          <Label htmlFor="period_to">Período hasta</Label>
           <Input
-            id="ts_to"
+            id="period_to"
             type="date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
@@ -83,19 +85,24 @@ export function OperationsDashboard() {
       <OperationsKpiCards data={summary.data} isLoading={summary.isLoading} />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <OperationsStatusFunnel
-          data={summary.data?.by_status}
-          isLoading={summary.isLoading}
-        />
         <OperationsTimeseries
           data={timeseries.data}
           isLoading={timeseries.isLoading}
         />
+        <OperationsAging
+          data={summary.data?.aging}
+          isLoading={summary.isLoading}
+        />
       </div>
+
+      <OperationsStatusFunnel
+        data={summary.data?.by_status}
+        isLoading={summary.isLoading}
+      />
 
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold tracking-tight">
-          OT atascadas
+          OT atascadas en planta
           <span className="ml-2 text-sm font-normal text-muted-foreground">
             requieren atención
           </span>

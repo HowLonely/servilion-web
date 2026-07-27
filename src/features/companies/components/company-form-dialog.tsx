@@ -199,7 +199,7 @@ export function CompanyFormDialog({
                 <FieldError errors={[errors.delivery_flow]} />
                 <p className="text-xs text-muted-foreground">
                   En Flujo 2 no se registra la entrega individual al trabajador:
-                  la OT pasa de despachada directo a cobrada.
+                  la OT queda en Despachada completa como estado terminal.
                 </p>
               </FieldContent>
             </Field>

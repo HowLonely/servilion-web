@@ -12,9 +12,12 @@ const W = 800;
 const H = 220;
 const PAD = { top: 16, right: 16, bottom: 26, left: 36 };
 
+// Ingreso (received_at) vs. producción (completed_at): las dos series con
+// volumen real. La entrega (delivered_at) hoy es ~0 —no se registra aún—, así
+// que se omite del gráfico para no mostrar una línea plana en cero.
 const SERIES = [
-  { key: "received" as const, label: "Recibidas", stroke: "stroke-blue-600 dark:stroke-blue-400", fill: "bg-blue-600 dark:bg-blue-400" },
-  { key: "delivered" as const, label: "Entregadas", stroke: "stroke-amber-600 dark:stroke-amber-400", fill: "bg-amber-600 dark:bg-amber-400" },
+  { key: "received" as const, label: "Ingresadas", stroke: "stroke-blue-600 dark:stroke-blue-400", fill: "bg-blue-600 dark:bg-blue-400" },
+  { key: "produced" as const, label: "Producidas", stroke: "stroke-emerald-600 dark:stroke-emerald-400", fill: "bg-emerald-600 dark:bg-emerald-400" },
 ];
 
 function shortDate(iso: string): string {
@@ -22,7 +25,7 @@ function shortDate(iso: string): string {
   return `${iso.slice(8, 10)}-${iso.slice(5, 7)}`;
 }
 
-function buildPath(points: Point[], key: "received" | "delivered", max: number): string {
+function buildPath(points: Point[], key: "received" | "produced", max: number): string {
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
   const step = points.length > 1 ? innerW / (points.length - 1) : 0;
@@ -43,14 +46,14 @@ export function OperationsTimeseries({
   isLoading: boolean;
 }) {
   const points = data?.points ?? [];
-  const max = Math.max(1, ...points.flatMap((p) => [p.received, p.delivered]));
+  const max = Math.max(1, ...points.flatMap((p) => [p.received, p.produced]));
   const innerH = H - PAD.top - PAD.bottom;
   const step = points.length > 1 ? (W - PAD.left - PAD.right) / (points.length - 1) : 0;
 
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between gap-4 space-y-0">
-        <CardTitle className="text-base">Ingreso vs. entrega diaria</CardTitle>
+        <CardTitle className="text-base">Ingreso vs. producción diaria</CardTitle>
         <div className="flex items-center gap-4">
           {SERIES.map((s) => (
             <span key={s.key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -72,7 +75,7 @@ export function OperationsTimeseries({
             viewBox={`0 0 ${W} ${H}`}
             className="h-56 w-full"
             role="img"
-            aria-label="Serie diaria de OT recibidas y entregadas"
+            aria-label="Serie diaria de OT ingresadas y producidas"
           >
             {/* Grilla horizontal recesiva + etiquetas del eje Y (0, medio, max). */}
             {[0, 0.5, 1].map((t) => {

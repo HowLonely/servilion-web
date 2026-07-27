@@ -69,8 +69,8 @@ Auth idéntica al resto: `Router(auth=JWTAuth())` + `@require_roles(User.Role.SU
 en cada ruta (el rol `ADMIN` pasa siempre, ver `authentication/permissions.py`).
 **No** exponer a apps de faena.
 
-> El reporte de facturación existente sigue en `/api/orders/reports/billing`; se
-> puede migrar a este router más adelante, fuera del alcance de este contrato.
+> El reporte de facturación (`/api/orders/reports/billing`) se retiró junto con
+> el estado `COBRADA`: el cobro pasó a ser un proceso fuera del sistema.
 
 ---
 
@@ -144,11 +144,20 @@ Umbrales de atasco (horas en el estado; configurables, defaults):
 
 ```python
 # report_services.py
-STALL_THRESHOLDS_H = {'RECIBIDA': 72, 'EN_REVISION': 48, 'INCOMPLETA': 48, 'COMPLETADA': 96}
-STALL_TIMESTAMP = {'RECIBIDA': 'received_at', 'EN_REVISION': 'updated_at',
-                   'INCOMPLETA': 'incomplete_at', 'COMPLETADA': 'completed_at'}
-WIP_STATUSES = ('RECIBIDA', 'EN_REVISION', 'INCOMPLETA', 'COMPLETADA')
+STALL_THRESHOLDS_H = {'RECIBIDA': 72, 'EN_REVISION': 48, 'INCOMPLETA': 48}
+STALL_TIMESTAMP    = {'RECIBIDA': 'received_at', 'EN_REVISION': 'updated_at',
+                      'INCOMPLETA': 'incomplete_at'}
+# WIP = trabajo ACTIVO en planta. COMPLETADA queda FUERA: significa "producida y
+# despachada" (ya salió de planta), no trabajo pendiente. Incluirla inflaba el
+# WIP con las ~210k guías históricas ya terminadas (bug: 210k "en proceso" y
+# "atascadas"). La entrega (COMPLETADA -> ENTREGADA) se registra aparte.
+IN_PLANT_STATUSES = ('RECIBIDA', 'EN_REVISION', 'INCOMPLETA')
 ```
+
+**`state_since` con fallback.** El atasco y el aging se miden contra un
+`state_since` anotado (`Case/When` por estado, `Coalesce(<ts>, received_at)`): el
+legado dejó `incomplete_at` nulo en muchas guías INCOMPLETA, y sin fallback
+quedaban fuera del cálculo.
 
 ---
 
@@ -156,73 +165,71 @@ WIP_STATUSES = ('RECIBIDA', 'EN_REVISION', 'INCOMPLETA', 'COMPLETADA')
 
 ## 1.1 `GET /api/reports/operations/summary`
 
-Alimenta las **tarjetas KPI** + el **embudo de estados**. Es el que el front
-pollea cada 15–30 s.
+Alimenta las **tarjetas KPI** (flujo + foto de planta), el **gráfico de aging** y
+el **embudo de estados**. Es el que el front pollea cada 15–30 s (cacheado 10 s).
+
+Separa dos conceptos que NO deben mezclarse (la lección del rediseño):
+
+- **FLUJO** — ritmo sobre una ventana (`date_from`/`date_to`, default últimos 30
+  días): ingresadas (`received_at`), producidas (`completed_at`), turnaround
+  recepción→producción, tasa de incompletos. Con Δ% vs. período anterior.
+- **STOCK / foto de planta** — instantánea AHORA, sin ventana de fecha: WIP en
+  planta (`IN_PLANT_STATUSES`), atascadas, incompletos abiertos, aging por
+  tramos. No se acota por fecha para no ocultar guías viejas estancadas.
+
+> El turnaround (recepción→producción) es el KPI estrella y está bien poblado
+> (`completed_at` en ~99,8% de las guías; mediana real ~5 d). `promised_at` (SLA)
+> y `delivered_at` reciente están casi vacíos en el dataset legado, así que NO se
+> usan como métricas de cabecera (por eso se retiraron `at_risk_count` y la
+> columna "entrega prometida").
 
 ### Response — `OperationsSummaryOut`
 
 ```python
 # report_schemas.py
-from ninja import Schema
-
 class StatusCount(Schema):
-    status: str            # RECIBIDA | EN_REVISION | INCOMPLETA | COMPLETADA | ENTREGADA | COBRADA
+    status: str            # RECIBIDA | EN_REVISION | INCOMPLETA | COMPLETADA | ENTREGADA
+    count: int
+
+class AgingBucket(Schema):
+    label: str             # "0-1d" | "1-2d" | "2-4d" | "4-7d" | "7d+"
     count: int
 
 class OperationsSummaryOut(Schema):
-    generated_at: str                 # ISO-8601, para el "actualizado hace Xs" del front
-    wip_total: int                    # guías en WIP_STATUSES
-    by_status: list[StatusCount]      # conteo por estado (embudo)
-    stalled_count: int                # guías sobre su umbral de antigüedad
-    at_risk_count: int                # promised_at < ahora+24h y aún no COMPLETADA
-    avg_wip_age_days: float           # antigüedad media del WIP desde received_at
-    received_today: int
-    delivered_today: int
+    generated_at: datetime
+    period_days: int                       # largo de la ventana de flujo
+    # Flujo del período
+    received: int
+    produced: int                          # completadas en la ventana
+    received_delta_pct: float | None       # Δ% vs período anterior comparable
+    produced_delta_pct: float | None
+    incomplete: int                        # incidencias surgidas en la ventana
+    incomplete_rate: float
+    # Turnaround recepción -> producción (guías producidas en la ventana)
+    tat_p50_days: float
+    tat_p90_days: float
+    tat_target_days: int                   # meta de servicio (TAT_TARGET_DAYS)
+    tat_on_target_pct: float
+    # Foto de planta AHORA
+    in_plant: int                          # WIP activo (IN_PLANT_STATUSES)
+    in_plant_by_status: list[StatusCount]
+    open_incomplete: int
+    stalled_count: int
+    oldest_in_plant_days: float
+    aging: list[AgingBucket]
+    by_status: list[StatusCount]           # distribución completa (contexto)
 ```
 
-### Servicio
+Detalles de implementación (ver `report_services._compute_operations_summary`):
 
-```python
-# report_services.py
-from datetime import datetime, timedelta, timezone
-from django.db.models import Count, Avg, F, Q
-from django.db.models.functions import Now
-from orders.models import LaundryOrder, OrderStatus
-
-def get_operations_summary(**filters) -> dict:
-    now = datetime.now(timezone.utc)
-    qs = apply_filters(LaundryOrder.objects.all(), **filters)
-
-    # Conteo por estado en UNA query agregada.
-    counts = dict(qs.values_list('status').annotate(c=Count('id')).values_list('status', 'c'))
-    wip = qs.filter(status__in=WIP_STATUSES)
-
-    # Atascadas: OR de (estado X AND su_timestamp < ahora - umbral_X).
-    stalled_q = Q()
-    for st, hours in STALL_THRESHOLDS_H.items():
-        field = STALL_TIMESTAMP[st]
-        stalled_q |= Q(**{'status': st, f'{field}__lt': now - timedelta(hours=hours)})
-
-    at_risk = wip.exclude(status=OrderStatus.COMPLETED).filter(
-        promised_at__lt=now + timedelta(hours=24)
-    ).count()
-
-    avg_age = wip.aggregate(d=Avg(Now() - F('received_at')))['d']
-
-    return {
-        'generated_at': now.isoformat(),
-        'wip_total': sum(counts.get(s, 0) for s in WIP_STATUSES),
-        'by_status': [{'status': s, 'count': counts.get(s, 0)} for s in OrderStatus.values],
-        'stalled_count': wip.filter(stalled_q).count(),
-        'at_risk_count': at_risk,
-        'avg_wip_age_days': round(avg_age.total_seconds() / 86400, 1) if avg_age else 0.0,
-        'received_today': qs.filter(received_at__date=now.date()).count(),
-        'delivered_today': qs.filter(delivered_at__date=now.date()).count(),
-    }
-```
-
-> Solo agrega (`COUNT`/`AVG`), no serializa relaciones ⇒ no requiere
-> `select_related`. Todo cae sobre índices existentes o los de §3.
+- **Turnaround** por percentiles en Python sobre las duraciones acotadas por la
+  ventana (`completed_at - received_at`): más portable que `PERCENTILE_CONT` y el
+  volumen por ventana es pequeño. `tat_on_target_pct` = % dentro de
+  `TAT_TARGET_DAYS`.
+- **Aging** desde `state_since` (ver §3), repartido en `AGING_BUCKETS_DAYS`.
+  Reemplaza a la antigüedad media (un puñado de guías zombi del archivo la
+  disparaba a miles de días).
+- **Δ%** compara contra la ventana previa del mismo largo.
 
 ---
 
@@ -237,49 +244,46 @@ el decorador — mismo patrón que `list_orders`).
 ```python
 class StalledOrderOut(Schema):
     id: int
-    order_number: str
+    order_number: str | None
     reference: str
     company_name: str          # resuelto de company.name
     worker_name: str           # resuelto de worker.full_name
     status: str
-    since: str                 # timestamp de entrada al estado actual
+    since: datetime | None     # state_since (entrada al estado, con fallback)
     age_hours: float           # horas en el estado actual
     threshold_hours: int       # umbral de su estado
-    promised_at: str | None
 ```
 
 ### Servicio
 
 ```python
-def get_stalled_orders(**filters) -> list:
-    now = datetime.now(timezone.utc)
-    qs = apply_filters(LaundryOrder.objects.all(), **filters).filter(status__in=WIP_STATUSES)
-
-    stalled_q = Q()
-    for st, hours in STALL_THRESHOLDS_H.items():
-        field = STALL_TIMESTAMP[st]
-        stalled_q |= Q(**{'status': st, f'{field}__lt': now - timedelta(hours=hours)})
-
-    return (qs.filter(stalled_q)
+def get_stalled_orders(**filters) -> QuerySet:
+    # Solo trabajo activo en planta: una COMPLETADA ya salió de planta, no se
+    # "atasca". Así la tabla queda accionable (decenas), no inundada por el archivo.
+    qs = annotate_state_since(
+        apply_filters(LaundryOrder.objects.all(), **filters).filter(status__in=IN_PLANT_STATUSES)
+    )
+    return (qs.filter(_stalled_q(timezone.now()))
               .select_related('company', 'worker')      # evita N+1 en *_name
-              .order_by('received_at'))                 # más antiguas primero
-    # age_hours / since / threshold_hours se calculan por fila en el resolver del schema
-    # o en un pequeño map antes de retornar (usando STALL_TIMESTAMP[status]).
+              .order_by('state_since'))                 # las más atascadas primero
 ```
 
 ---
 
 ## 1.3 `GET /api/reports/operations/timeseries`
 
-Alimenta la **línea de ingreso vs. entrega diaria**.
+Alimenta la **línea de ingreso vs. producción diaria**. Se muestran `received` y
+`produced` (las dos series con volumen real); `delivered` viaja en el payload
+pero hoy es ~0 (la entrega no se registra aún), así que el front no la dibuja.
 
 ### Response — `TimeseriesOut`
 
 ```python
 class TimeseriesPoint(Schema):
     date: str          # YYYY-MM-DD (inicio del bucket)
-    received: int      # guías con received_at en el bucket
-    delivered: int     # guías con delivered_at en el bucket
+    received: int      # guías con received_at en el bucket (ingresadas)
+    produced: int      # guías con completed_at en el bucket (producidas)
+    delivered: int     # guías con delivered_at en el bucket (~0 hoy)
 
 class TimeseriesOut(Schema):
     granularity: str   # 'day' | 'week'
@@ -532,8 +536,10 @@ registros **importados del Access legado**, no de bugs. En operación normal
 - **`open_incomplete` se cuenta por estado (`status=INCOMPLETA`), no por
   `incomplete_at`**, justo para ser robusto a lo anterior: refleja las 499 guías
   realmente incompletas hoy, no 0.
-- **`stalled_count` y `avg_wip_age_days` salen inflados** porque ~210k guías
-  históricas quedaron en `COMPLETADA` con `received_at` de años atrás. Con el
-  filtro de rango de fechas del front (operación reciente) se normalizan.
+- **`stalled_count` / WIP ya NO se inflan con el archivo.** COMPLETADA salió de
+  `IN_PLANT_STATUSES` (ya está "producida y despachada", no es trabajo en curso),
+  así que el WIP en planta baja de ~210k a ~630 y las atascadas a decenas — reales
+  y accionables. La antigüedad media (dominada por guías zombi de años atrás) se
+  reemplazó por el **aging por tramos** y `oldest_in_plant_days`.
 - **`discrepancy_rate = 1.0`**: el import dejó `observations` no vacío en todas
   las guías legadas. Solo afecta al histórico.

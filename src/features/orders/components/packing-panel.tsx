@@ -241,8 +241,8 @@ export function PackingPanel({ order }: { order: LaundryOrderOut }) {
             const result = await finish.mutateAsync({ note: "" });
             toast[result.status === "COMPLETADA" ? "success" : "warning"](
               result.status === "COMPLETADA"
-                ? "Morral validado: OT completada."
-                : "Morral incompleto: OT marcada como incompleta.",
+                ? "Morral validado: OT despachada completa."
+                : "Morral incompleto: OT marcada como despachada incompleta.",
             );
           } catch (error) {
             toast.error(parseApiError(error).detail);
@@ -252,9 +252,10 @@ export function PackingPanel({ order }: { order: LaundryOrderOut }) {
         Cerrar empaque
       </Button>
       <p className="text-sm text-muted-foreground">
-        Al cerrar, si falta alguna prenda la OT queda <strong>Incompleta</strong>{" "}
-        con la discrepancia anotada; si está completa pasa a{" "}
-        <strong>Completada</strong> y se puede imprimir la boleta.
+        Al cerrar, si falta alguna prenda la OT queda{" "}
+        <strong>Despachada incompleta</strong> con la discrepancia anotada; si
+        está completa pasa a <strong>Despachada completa</strong> y se puede
+        imprimir la boleta.
       </p>
 
       {order.missing_item_resolutions.length > 0 && (
