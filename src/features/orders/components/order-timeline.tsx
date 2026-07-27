@@ -26,7 +26,7 @@ function packagingDelayNote(order: LaundryOrderOut): string | null {
     format: ["days", "hours", "minutes"],
     locale: es,
   });
-  return `Quedó incompleta el ${formatDateTime(order.incomplete_at)}; se completó ${
+  return `Quedó despachada incompleta el ${formatDateTime(order.incomplete_at)}; se despachó completa ${
     readable || "menos de un minuto"
   } después.`;
 }

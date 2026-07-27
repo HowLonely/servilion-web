@@ -15,8 +15,8 @@ export const STALLED_PAGE_SIZE = 25;
 
 export const operationsKeys = {
   all: ["reports", "operations"] as const,
-  summary: (companyId?: number) =>
-    ["reports", "operations", "summary", companyId ?? null] as const,
+  summary: (companyId: number | undefined, from: string, to: string) =>
+    ["reports", "operations", "summary", companyId ?? null, from, to] as const,
   stalled: (companyId: number | undefined, offset: number) =>
     ["reports", "operations", "stalled", companyId ?? null, offset] as const,
   timeseries: (companyId: number | undefined, from: string, to: string) =>
@@ -24,13 +24,21 @@ export const operationsKeys = {
 };
 
 // El filtro por empresa es la dimensión principal (la faena no es una entidad
-// del modelo). `undefined` = todas las empresas.
-export function useOperationsSummary(companyId?: number) {
+// del modelo). `undefined` = todas las empresas. El rango de fechas acota las
+// métricas de FLUJO del summary (ingresadas/producidas/turnaround); la foto de
+// planta (en planta/atascadas/aging) es siempre "ahora", la calcula el backend.
+export function useOperationsSummary(
+  companyId: number | undefined,
+  dateFrom: string,
+  dateTo: string,
+) {
   return useQuery({
-    queryKey: operationsKeys.summary(companyId),
+    queryKey: operationsKeys.summary(companyId, dateFrom, dateTo),
     queryFn: async () => {
       const { data, error } = await api.GET("/api/reports/operations/summary", {
-        params: { query: { company_id: companyId } },
+        params: {
+          query: { company_id: companyId, date_from: dateFrom, date_to: dateTo },
+        },
       });
       if (error) throw error;
       return data;

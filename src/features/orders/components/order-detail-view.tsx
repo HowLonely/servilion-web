@@ -118,13 +118,6 @@ export function OrderDetailView({ orderId }: { orderId: number }) {
                   Peso del morral: {order.weight_kg} kg
                 </p>
               )}
-              {/* El precio de las prendas se define por cliente en el catálogo;
-                  el monto se congela al cobrar la guía (billed_amount). */}
-              {order.billed_amount !== null && (
-                <p className="mt-1 text-sm font-medium">
-                  Monto cobrado: ${order.billed_amount.toLocaleString("es-CL")}
-                </p>
-              )}
             </CardContent>
           </Card>
 

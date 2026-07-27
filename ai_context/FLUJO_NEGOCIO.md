@@ -122,7 +122,7 @@ flowchart TD
     F --> G["7. Despacho + traslado a faena"]
     G --> H["8. Recepción morral limpio en faena\n(supervisor verifica)"]
     H --> I["9. Entrega en habitación\n(app Android — 2 QR, offline)"]
-    I --> J["10. Cobro a empresa contratista"]
+    I --> J["10. Cobro a empresa contratista\n(fuera del sistema por ahora)"]
 ```
 
 ### Paso 1 — Entrega del trabajador en faena
@@ -232,9 +232,9 @@ Aquí entra la **app Android** de reparto:
 4. Se actualiza `entregado` — la **fecha real de entrega**, distinta de `entrega` (fecha tentativa según turno impresa en la boleta).
 5. El contador **ENTREGADOS** de la app se incrementa.
 
-### Paso 10 — Cobro
+### Paso 10 — Cobro (fuera de alcance del sistema)
 
-La guía se factura a la empresa contratista. Estado: `COBRADA`. El reporte de facturación (`generate_billing_report_task`) agrega guías cobradas por empresa y rango de fechas.
+La guía se factura a la empresa contratista, pero esto ocurre fuera del sistema: no existe un estado `COBRADA` ni un reporte de facturación — se retiraron del flujo. `ENTREGADA` (Flujo 1) y `COMPLETADA` (Flujo 2) son los estados terminales de la guía.
 
 ---
 
@@ -263,10 +263,11 @@ Los estados del backend deben alinearse con el flujo real. Mapeo propuesto respe
 | `INCOMPLETA` | Discrepancia en conteo (observación registrada) |
 | `COMPLETADA` | Morral empaquetado y validado por pistoleo (paso 6) |
 | `DESPACHADA` | Morral en tránsito o recibido en faena (pasos 7–8) |
-| `ENTREGADA` | Entrega confirmada en habitación vía app (paso 9) |
-| `COBRADA` | Facturada a la empresa (paso 10) |
+| `ENTREGADA` | Entrega confirmada en habitación vía app (paso 9) — estado terminal en Flujo 1 |
 
 Cada cambio de estado queda auditado en `OrderStatusHistory`. El sistema legado solo guardaba el estado final.
+
+> **Nota:** `EN_LAVADO` y `DESPACHADA` nunca se implementaron como estados propios, y `COBRADA` se implementó pero se retiró del flujo (el cobro pasó a ser un proceso fuera del sistema). El enum vigente es `RECIBIDA`, `EN_REVISION`, `INCOMPLETA`, `COMPLETADA`, `ENTREGADA`.
 
 > **Nota:** Los timestamps `recepcion` (faena, paso 2) y `rlavanderia` (Antofagasta, paso 4) son eventos **anteriores** al estado `RECIBIDA` del backend actual. Conviene modelarlos como timestamps independientes, no como estados.
 

@@ -64,8 +64,8 @@ export function StalledOrdersTable({ companyId }: { companyId?: number }) {
               <TableHead>Empresa</TableHead>
               <TableHead>Trabajador</TableHead>
               <TableHead>Estado</TableHead>
+              <TableHead>En estado desde</TableHead>
               <TableHead className="text-right">Tiempo atascada</TableHead>
-              <TableHead>Entrega prometida</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -109,6 +109,9 @@ export function StalledOrdersTable({ companyId }: { companyId?: number }) {
                   <TableCell>
                     <OrderStatusBadge status={row.status} />
                   </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {formatDateTime(row.since)}
+                  </TableCell>
                   <TableCell
                     className={cn(
                       "text-right text-sm font-medium tabular-nums",
@@ -117,9 +120,6 @@ export function StalledOrdersTable({ companyId }: { companyId?: number }) {
                     title={`Umbral: ${row.threshold_hours}h`}
                   >
                     {formatAge(row.age_hours)}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {formatDateTime(row.promised_at)}
                   </TableCell>
                 </TableRow>
               ))

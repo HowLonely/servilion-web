@@ -30,9 +30,9 @@ export function OrderStatusActions({
   currentStatus: string;
   deliveryFlow: string;
 }) {
-  // En Flujo 2 no existe la entrega en habitación, así que el botón que se
-  // ofrece tras completar la guía es el de cobro (ver FLUJO_NEGOCIO.md §2).
-  // ENTREGADA se omite a propósito: la entrega se registra en
+  // En Flujo 2 no existe la entrega en habitación, así que COMPLETADA es el
+  // estado terminal: no hay ningún botón manual siguiente que ofrecer.
+  // ENTREGADA se omite a propósito (Flujo 1): la entrega se registra en
   // `OrderFlowActions`, que exige la recepción previa del morral limpio en
   // faena antes de dar por entregado el morral.
   const nextStatuses = validNextStatuses(currentStatus, deliveryFlow).filter(
@@ -104,7 +104,7 @@ function StatusTransitionButton({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Marcar OT como incompleta</DialogTitle>
+          <DialogTitle>Marcar OT como despachada incompleta</DialogTitle>
         </DialogHeader>
         <Textarea
           placeholder="Describe qué prenda falta o sobra..."

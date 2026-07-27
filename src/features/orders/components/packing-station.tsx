@@ -157,7 +157,8 @@ export function PackingStation() {
                       order.status}
                   </strong>
                   , fuera de la etapa de empaque. Solo se puede validar mientras
-                  el morral está en planta (Recibida, En revisión o Incompleta).
+                  el morral está en planta (Recibida, En revisión o Despachada
+                  incompleta).
                 </span>
               </CardContent>
             </Card>

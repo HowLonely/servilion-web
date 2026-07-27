@@ -6,7 +6,7 @@ export default function OperationsReportPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Torre de control"
-        description="Estado operativo en tiempo real: trabajo en proceso, cuellos de botella y OT atascadas."
+        description="Ritmo de producción, turnaround y trabajo en planta en tiempo real."
       />
       <OperationsDashboard />
     </div>

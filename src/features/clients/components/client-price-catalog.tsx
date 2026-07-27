@@ -25,9 +25,10 @@ import {
 } from "@/features/clients/hooks/use-clients";
 
 // Editor del catálogo de precios de un cliente: por cada tipo de prenda del
-// catálogo se fija el precio con el que se cobran TODAS las empresas del cliente.
-// El monto de cada guía se congela al cobrarla, así que cambiar un precio aquí no
-// altera guías ya cobradas.
+// catálogo se fija el precio con el que se cobran TODAS las empresas del
+// cliente. El cobro en sí es un proceso fuera del sistema (ver
+// features/orders/lib/status.ts): este catálogo queda listo para cuando se
+// retome.
 export function ClientPriceCatalog({ clientId }: { clientId: number }) {
   const { data: garmentsPage, isLoading: loadingGarments } = useGarmentTypes({
     is_active: true,

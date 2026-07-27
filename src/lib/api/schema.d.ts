@@ -412,40 +412,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/orders/reports/billing": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Request Billing Report */
-        post: operations["orders_api_request_billing_report"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/orders/reports/billing/{task_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Billing Report */
-        get: operations["orders_api_get_billing_report"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/orders/{order_id}": {
         parameters: {
             query?: never;
@@ -1217,8 +1183,6 @@ export interface components {
             clean_receptions: components["schemas"]["CleanReceptionOut"][];
             /** Delivered At */
             delivered_at: string | null;
-            /** Billed At */
-            billed_at: string | null;
             /** Observations */
             observations: string;
             /** Reference */
@@ -1227,8 +1191,6 @@ export interface components {
             control_code: string;
             /** Photo Url */
             photo_url: string | null;
-            /** Billed Amount */
-            billed_amount: number | null;
             /** Items */
             items: components["schemas"]["OrderItemOut"][];
             /** Missing Item Resolutions */
@@ -1545,41 +1507,6 @@ export interface components {
              */
             updated_at: string;
         };
-        /** BillingReportTaskOut */
-        BillingReportTaskOut: {
-            /** Task Id */
-            task_id: string;
-        };
-        /**
-         * BillingReportRequestIn
-         * @description Solicita el reporte de facturación. Indicar `client_id` (agrega todas sus
-         *     empresas, con desglose por empresa) o `company_id` (una sola empresa).
-         */
-        BillingReportRequestIn: {
-            /** Company Id */
-            company_id?: number | null;
-            /** Client Id */
-            client_id?: number | null;
-            /**
-             * Date From
-             * Format: date-time
-             */
-            date_from: string;
-            /**
-             * Date To
-             * Format: date-time
-             */
-            date_to: string;
-        };
-        /** BillingReportResultOut */
-        BillingReportResultOut: {
-            /** Status */
-            status: string;
-            /** Result */
-            result?: {
-                [key: string]: unknown;
-            } | null;
-        };
         /** OrderStatusHistoryOut */
         OrderStatusHistoryOut: {
             /** Id */
@@ -1745,6 +1672,13 @@ export interface components {
             /** Object Key */
             object_key: string;
         };
+        /** AgingBucket */
+        AgingBucket: {
+            /** Label */
+            label: string;
+            /** Count */
+            count: number;
+        };
         /** OperationsSummaryOut */
         OperationsSummaryOut: {
             /**
@@ -1752,20 +1686,42 @@ export interface components {
              * Format: date-time
              */
             generated_at: string;
-            /** Wip Total */
-            wip_total: number;
-            /** By Status */
-            by_status: components["schemas"]["StatusCount"][];
+            /** Period Days */
+            period_days: number;
+            /** Received */
+            received: number;
+            /** Produced */
+            produced: number;
+            /** Received Delta Pct */
+            received_delta_pct: number | null;
+            /** Produced Delta Pct */
+            produced_delta_pct: number | null;
+            /** Incomplete */
+            incomplete: number;
+            /** Incomplete Rate */
+            incomplete_rate: number;
+            /** Tat P50 Days */
+            tat_p50_days: number;
+            /** Tat P90 Days */
+            tat_p90_days: number;
+            /** Tat Target Days */
+            tat_target_days: number;
+            /** Tat On Target Pct */
+            tat_on_target_pct: number;
+            /** In Plant */
+            in_plant: number;
+            /** In Plant By Status */
+            in_plant_by_status: components["schemas"]["StatusCount"][];
+            /** Open Incomplete */
+            open_incomplete: number;
             /** Stalled Count */
             stalled_count: number;
-            /** At Risk Count */
-            at_risk_count: number;
-            /** Avg Wip Age Days */
-            avg_wip_age_days: number;
-            /** Received Today */
-            received_today: number;
-            /** Delivered Today */
-            delivered_today: number;
+            /** Oldest In Plant Days */
+            oldest_in_plant_days: number;
+            /** Aging */
+            aging: components["schemas"]["AgingBucket"][];
+            /** By Status */
+            by_status: components["schemas"]["StatusCount"][];
         };
         /** StatusCount */
         StatusCount: {
@@ -1785,9 +1741,10 @@ export interface components {
          * StalledOrderOut
          * @description Una guía que lleva demasiado tiempo en su estado actual.
          *
-         *     `since`, `age_hours` y `threshold_hours` dependen del estado, así que se
-         *     resuelven por fila leyendo el timestamp de entrada que le corresponde
-         *     (STALL_TIMESTAMP). El servicio ya hizo `select_related('company', 'worker')`.
+         *     `since` viene anotado por el servicio (`state_since`: timestamp de entrada al
+         *     estado con fallback a `received_at`). `age_hours` se deriva de él y
+         *     `threshold_hours` sale del umbral del estado. El servicio ya hizo
+         *     `select_related('company', 'worker')`.
          */
         StalledOrderOut: {
             /** Id */
@@ -1808,8 +1765,6 @@ export interface components {
             age_hours: number;
             /** Threshold Hours */
             threshold_hours: number;
-            /** Promised At */
-            promised_at: string | null;
         };
         /** TimeseriesOut */
         TimeseriesOut: {
@@ -1824,6 +1779,8 @@ export interface components {
             date: string;
             /** Received */
             received: number;
+            /** Produced */
+            produced: number;
             /** Delivered */
             delivered: number;
         };
@@ -2794,52 +2751,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrderSyncBatchOut"];
-                };
-            };
-        };
-    };
-    orders_api_request_billing_report: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BillingReportRequestIn"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BillingReportTaskOut"];
-                };
-            };
-        };
-    };
-    orders_api_get_billing_report: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                task_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BillingReportResultOut"];
                 };
             };
         };
