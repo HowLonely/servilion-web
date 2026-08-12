@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Printer } from "lucide-react";
+import { Printer, Tags } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDateTime } from "@/lib/date";
+import { CompanyLogo } from "@/features/companies/components/company-logo";
 import { OrderFlowActions } from "@/features/orders/components/order-flow-actions";
 import { OrderItemsTable } from "@/features/orders/components/order-items-table";
 import { OrderNumberLabel } from "@/features/orders/components/order-number-label";
@@ -46,22 +47,35 @@ export function OrderDetailView({ orderId }: { orderId: number }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold">
-            OT <OrderNumberLabel value={order.order_number} />
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Ref: {order.reference || "—"} · Control: {order.control_code || "—"} ·
-            Ticket: {order.ticket_number || "—"}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Digitalizada el {formatDateTime(order.received_at)} · Entrega
-            tentativa: {formatDateTime(order.promised_at)}
-          </p>
+        <div className="flex min-w-0 items-start gap-3">
+          <CompanyLogo
+            name={order.company_name}
+            logoUrl={order.company_logo_url}
+          />
+          <div className="min-w-0">
+            <h1 className="flex items-center gap-2 text-2xl font-semibold">
+              OT <OrderNumberLabel value={order.order_number} />
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Ref: {order.reference || "—"} · Control:{" "}
+              {order.control_code || "—"} · Ticket:{" "}
+              {order.ticket_number || "—"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Digitalizada el {formatDateTime(order.received_at)} · Entrega
+              tentativa: {formatDateTime(order.promised_at)}
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary">{flowLabel}</Badge>
           <OrderStatusBadge status={order.status} />
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/orders/${order.id}/labels`}>
+              <Tags className="size-4" />
+              Etiquetas
+            </Link>
+          </Button>
           <Button variant="outline" size="sm" asChild>
             <Link href={`/orders/${order.id}/receipt`}>
               <Printer className="size-4" />

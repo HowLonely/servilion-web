@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Field, FieldContent, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { parseApiError } from "@/lib/api/errors";
-import { ClientSelect } from "@/features/clients/components/client-select";
+import { FaenaSelect } from "@/features/camps/components/faena-select";
 import {
   useCreateCamp,
   useUpdateCamp,
@@ -36,7 +36,7 @@ export function CampFormDialog({
   const [open, setOpen] = useState(false);
   const isEdit = Boolean(camp);
 
-  const [clientId, setClientId] = useState<number | undefined>(camp?.client_id);
+  const [faenaId, setFaenaId] = useState<number | undefined>(camp?.faena_id);
   const [campName, setCampName] = useState(camp?.name ?? "");
   const [saving, setSaving] = useState(false);
 
@@ -45,21 +45,21 @@ export function CampFormDialog({
 
   useEffect(() => {
     if (!open) return;
-    setClientId(camp?.client_id);
+    setFaenaId(camp?.faena_id);
     setCampName(camp?.name ?? "");
   }, [open, camp]);
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (!clientId || !campName.trim()) {
-      toast.error("Elige un cliente y escribe el nombre del campamento.");
+    if (!faenaId || !campName.trim()) {
+      toast.error("Elige la faena y escribe el nombre del campamento.");
       return;
     }
 
     setSaving(true);
     try {
       const body = {
-        client_id: clientId,
+        faena_id: faenaId,
         name: campName.trim(),
         is_active: camp?.is_active ?? true,
       };
@@ -84,21 +84,22 @@ export function CampFormDialog({
         <DialogHeader>
           <DialogTitle>{isEdit ? "Editar campamento" : "Nuevo campamento"}</DialogTitle>
           <DialogDescription>
-            El camp pertenece a un cliente, no a una empresa: varias
-            contratistas del mismo cliente alojan a su gente en el mismo lugar.
+            El campamento pertenece a la faena, no al cliente: la misma puerta
+            aloja a trabajadores de distintas contratistas, se le facture a
+            quien se le facture.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={onSubmit} noValidate>
           <FieldGroup>
             <Field>
-              <FieldLabel>Cliente</FieldLabel>
+              <FieldLabel>Faena</FieldLabel>
               <FieldContent>
-                {/* Mover un camp de cliente dejaría a sus rooms
-                    (y a los QR ya pegados) colgando de otra faena. */}
-                <ClientSelect
-                  value={clientId}
-                  onChange={setClientId}
+                {/* Mover un campamento de faena dejaría a sus habitaciones
+                    —y a los QR ya pegados en las puertas— en otro sitio. */}
+                <FaenaSelect
+                  value={faenaId}
+                  onChange={setFaenaId}
                   disabled={isEdit}
                 />
               </FieldContent>

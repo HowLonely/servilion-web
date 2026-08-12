@@ -37,6 +37,8 @@ import {
 } from "@/features/companies/hooks/use-companies";
 import {
   companySchema,
+  SERVICE_TYPES,
+  SERVICE_TYPE_LABELS,
   type CompanyFormValues,
 } from "@/features/companies/schemas/company-schema";
 
@@ -72,9 +74,10 @@ export function CompanyFormDialog({
       client_id: company?.client_id ?? null,
       tax_id: company?.tax_id ?? "",
       billing_type: (company?.billing_type as "PRENDAS" | "KILOS") ?? "PRENDAS",
+      service_type:
+        (company?.service_type as "PERSONAL" | "HOTELERIA") ?? "PERSONAL",
       delivery_flow:
         (company?.delivery_flow as "FLUJO_1" | "FLUJO_2") ?? "FLUJO_1",
-      reference_prefix: company?.reference_prefix ?? "",
       contact_name: company?.contact_name ?? "",
       phone: company?.phone ?? "",
     },
@@ -87,10 +90,11 @@ export function CompanyFormDialog({
         client_id: company?.client_id ?? null,
         tax_id: company?.tax_id ?? "",
         billing_type: (company?.billing_type as "PRENDAS" | "KILOS") ?? "PRENDAS",
+        service_type:
+          (company?.service_type as "PERSONAL" | "HOTELERIA") ?? "PERSONAL",
         delivery_flow:
           (company?.delivery_flow as "FLUJO_1" | "FLUJO_2") ?? "FLUJO_1",
-        reference_prefix: company?.reference_prefix ?? "",
-        contact_name: company?.contact_name ?? "",
+          contact_name: company?.contact_name ?? "",
         phone: company?.phone ?? "",
       });
     }
@@ -156,6 +160,33 @@ export function CompanyFormDialog({
               </FieldContent>
             </Field>
             <Field>
+              <FieldLabel htmlFor="service_type">Tipo de servicio</FieldLabel>
+              <FieldContent>
+                <Select
+                  value={watch("service_type")}
+                  onValueChange={(value: string) =>
+                    setValue("service_type", value as "PERSONAL" | "HOTELERIA")
+                  }
+                >
+                  <SelectTrigger id="service_type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SERVICE_TYPES.map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {SERVICE_TYPE_LABELS[value]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldError errors={[errors.service_type]} />
+                <p className="text-xs text-muted-foreground">
+                  Hotelería no opera con OT ni habitación: su lencería llega a
+                  granel y se registra como lote en el módulo de Hotelería.
+                </p>
+              </FieldContent>
+            </Field>
+            <Field>
               <FieldLabel htmlFor="billing_type">Tipo de cobro</FieldLabel>
               <FieldContent>
                 <Select
@@ -200,22 +231,6 @@ export function CompanyFormDialog({
                 <p className="text-xs text-muted-foreground">
                   En Flujo 2 no se registra la entrega individual al trabajador:
                   la OT queda en Despachada completa como estado terminal.
-                </p>
-              </FieldContent>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="reference_prefix">Prefijo del ref</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="reference_prefix"
-                  maxLength={3}
-                  placeholder="P"
-                  {...register("reference_prefix")}
-                />
-                <FieldError errors={[errors.reference_prefix]} />
-                <p className="text-xs text-muted-foreground">
-                  Inicial de faena o empresa que antecede al correlativo semanal
-                  (ej. P1238). Si se deja vacío se usa la inicial del nombre.
                 </p>
               </FieldContent>
             </Field>

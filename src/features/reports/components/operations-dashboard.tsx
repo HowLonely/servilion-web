@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import { dateInputDaysAgo } from "@/lib/date";
 import { CompanySelect } from "@/features/companies/components/company-select";
 import { OperationsAging } from "@/features/reports/components/operations-aging";
@@ -32,14 +34,31 @@ function LiveBadge({ isFetching }: { isFetching: boolean }) {
   );
 }
 
+// Accesos rápidos de período. `days` es la ventana hacia atrás desde hoy
+// (0 = solo hoy). El resumen se calcula comparando dateFrom/dateTo contra lo
+// que generaría cada preset, así el botón activo refleja el filtro real
+// aunque el usuario haya llegado a él editando los inputs a mano.
+const PERIOD_PRESETS = [
+  { label: "Hoy", days: 0 },
+  { label: "Última semana", days: 6 },
+  { label: "Últimos 30 días", days: 29 },
+] as const;
+
+const DEFAULT_PRESET_DAYS = 6;
+
 export function OperationsDashboard() {
   const [companyId, setCompanyId] = useState<number | undefined>(undefined);
   // El período acota las métricas de FLUJO (ingresadas/producidas/turnaround) y
   // la serie diaria. La foto de planta (en planta, atascadas, aging) es siempre
   // "ahora": la calcula el backend sin filtro de fecha, para no ocultar guías
   // viejas que llevan tiempo estancadas.
-  const [dateFrom, setDateFrom] = useState(dateInputDaysAgo(30));
+  const [dateFrom, setDateFrom] = useState(dateInputDaysAgo(DEFAULT_PRESET_DAYS));
   const [dateTo, setDateTo] = useState(dateInputDaysAgo(0));
+
+  function applyPreset(days: number) {
+    setDateFrom(dateInputDaysAgo(days));
+    setDateTo(dateInputDaysAgo(0));
+  }
 
   const summary = useOperationsSummary(companyId, dateFrom, dateTo);
   const timeseries = useOperationsTimeseries(companyId, dateFrom, dateTo);
@@ -76,6 +95,28 @@ export function OperationsDashboard() {
             onChange={(e) => setDateTo(e.target.value)}
             className="sm:w-40"
           />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label>Accesos rápidos</Label>
+          <div className="flex flex-wrap gap-1.5">
+            {PERIOD_PRESETS.map((preset) => {
+              const isActive =
+                dateFrom === dateInputDaysAgo(preset.days) &&
+                dateTo === dateInputDaysAgo(0);
+              return (
+                <Button
+                  key={preset.label}
+                  type="button"
+                  size="sm"
+                  variant={isActive ? "default" : "outline"}
+                  className={cn(!isActive && "text-muted-foreground")}
+                  onClick={() => applyPreset(preset.days)}
+                >
+                  {preset.label}
+                </Button>
+              );
+            })}
+          </div>
         </div>
         <div className="sm:ml-auto sm:pb-2.5">
           <LiveBadge isFetching={summary.isFetching} />

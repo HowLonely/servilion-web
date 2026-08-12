@@ -7,6 +7,20 @@ export const BILLING_TYPES = ["PRENDAS", "KILOS"] as const;
 // mandante sin trazabilidad individual.
 export const DELIVERY_FLOWS = ["FLUJO_1", "FLUJO_2"] as const;
 
+// Qué lava el contrato, que es lo que decide con qué módulo se opera. PERSONAL
+// es la ropa de un trabajador y va como guía (con OT, habitación y entrega
+// individual); HOTELERIA es lencería a granel del campamento y va como lote en
+// su propio módulo, sin persona ni destino individual.
+export const SERVICE_TYPES = ["PERSONAL", "HOTELERIA"] as const;
+
+export const SERVICE_TYPE_LABELS: Record<
+  (typeof SERVICE_TYPES)[number],
+  string
+> = {
+  PERSONAL: "Ropa de trabajador",
+  HOTELERIA: "Lencería de hotelería",
+};
+
 export const companySchema = z.object({
   name: z.string().min(1, "El nombre es obligatorio."),
   // Vacío (null) => el backend crea un cliente 1:1 con el mismo nombre (caso
@@ -14,13 +28,8 @@ export const companySchema = z.object({
   client_id: z.number().nullable(),
   tax_id: z.string(),
   billing_type: z.enum(BILLING_TYPES),
+  service_type: z.enum(SERVICE_TYPES),
   delivery_flow: z.enum(DELIVERY_FLOWS),
-  // Inicial de faena/empresa que antecede al correlativo semanal del ref
-  // (la "P" de P1238).
-  reference_prefix: z
-    .string()
-    .max(3, "Máximo 3 caracteres.")
-    .regex(/^[A-Za-z]*$/, "Solo letras."),
   contact_name: z.string(),
   phone: z.string(),
 });

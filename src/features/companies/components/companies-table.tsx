@@ -167,7 +167,6 @@ export function CompaniesTable() {
                       : "Flujo 1 · habitación"}
                   </Badge>
                 </TableCell>
-                <TableCell>{company.reference_prefix || "—"}</TableCell>
                 <TableCell>{company.contact_name || "—"}</TableCell>
                 <TableCell>
                   <Badge variant={company.is_active ? "outline" : "secondary"}>

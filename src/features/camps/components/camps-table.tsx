@@ -41,12 +41,12 @@ export function CampsTable({
   /** Salta a la pestaña de habitaciones ya filtrada por este camp. */
   onVerRooms: (campId: number) => void;
 }) {
-  const [clientId, setClientId] = useState<number | undefined>();
+  const [faenaId, setFaenaId] = useState<number | undefined>();
   const [activeFilter, setActiveFilter] = useState<string>("true");
   const [offset, setOffset] = useState(0);
 
   const { data: page, isLoading } = useCamps({
-    client_id: clientId,
+    faena_id: faenaId,
     is_active: activeFilter === "all" ? undefined : activeFilter === "true",
     limit: CAMPS_PAGE_SIZE,
     offset,
@@ -59,9 +59,9 @@ export function CampsTable({
       <div className="flex flex-wrap items-center gap-2">
         <div className="w-56">
           <ClientSelect
-            value={clientId}
+            value={faenaId}
             onChange={(next) => {
-              setClientId(next);
+              setFaenaId(next);
               setOffset(0);
             }}
             placeholder="Todos los clientes"
@@ -150,7 +150,7 @@ function CampRow({
   async function toggleActive() {
     try {
       await updateCamp.mutateAsync({
-        client_id: camp.client_id,
+        faena_id: camp.faena_id,
         name: camp.name,
         is_active: !camp.is_active,
       });
@@ -165,7 +165,7 @@ function CampRow({
   return (
     <TableRow>
       <TableCell className="font-medium">{camp.name}</TableCell>
-      <TableCell className="text-muted-foreground">{camp.client_name}</TableCell>
+      <TableCell className="text-muted-foreground">{camp.faena_name}</TableCell>
       <TableCell className="text-right tabular-nums">
         {camp.rooms_count}
       </TableCell>

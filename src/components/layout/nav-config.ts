@@ -1,4 +1,5 @@
 import {
+  BedDouble,
   Building2,
   ClipboardList,
   Contact,
@@ -6,6 +7,7 @@ import {
   GaugeCircle,
   LayoutDashboard,
   PackageCheck,
+  PackagePlus,
   Shirt,
   Tent,
   TriangleAlert,
@@ -133,6 +135,30 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: PackageCheck,
         description: "Pistolear cada prenda del morral limpio y validar completitud",
         roles: PACKING_ROLES,
+      },
+    ],
+  },
+  {
+    // Grupo aparte y no un ítem más de "Operación": hotelería es otro servicio,
+    // no otra pantalla del mismo. Lo que entra es lencería a granel del
+    // campamento —sin trabajador, sin habitación y sin entrega individual—, así
+    // que separarlo en el menú evita que alguien busque un morral aquí o
+    // registre sábanas como si fueran la ropa de una persona.
+    label: "Hotelería",
+    items: [
+      {
+        href: "/hospitality",
+        label: "Lotes de lencería",
+        icon: BedDouble,
+        description: "Cargas de lencería del campamento y su merma",
+        roles: OPERATIONS_ROLES,
+      },
+      {
+        href: "/hospitality/new",
+        label: "Recibir carga",
+        icon: PackagePlus,
+        description: "Registrar la llegada de lencería sucia del campamento",
+        roles: DIGITIZE_ROLES,
       },
     ],
   },

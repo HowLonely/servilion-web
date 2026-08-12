@@ -17,7 +17,7 @@ const ALL_VALUE = "__all__";
 export function CampSelect({
   value,
   onChange,
-  clientId,
+  faenaId,
   placeholder = "Selecciona un campamento",
   includeAllOption,
   className,
@@ -25,13 +25,13 @@ export function CampSelect({
   value: number | undefined;
   onChange: (campId: number | undefined) => void;
   /** Acota la lista a los campamentos de un cliente. */
-  clientId?: number;
+  faenaId?: number;
   placeholder?: string;
   includeAllOption?: string;
   className?: string;
 }) {
   const { data: page, isLoading } = useCamps({
-    client_id: clientId,
+    faena_id: faenaId,
     is_active: true,
     limit: CAMPS_SELECT_LIMIT,
   });
@@ -53,7 +53,7 @@ export function CampSelect({
         {camps?.map((camp) => (
           <SelectItem key={camp.id} value={String(camp.id)}>
             {camp.name}
-            <span className="text-muted-foreground"> · {camp.client_name}</span>
+            <span className="text-muted-foreground"> · {camp.faena_name}</span>
           </SelectItem>
         ))}
       </SelectContent>
