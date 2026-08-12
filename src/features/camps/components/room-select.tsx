@@ -32,21 +32,21 @@ const NONE_VALUE = "__none__";
 export function RoomSelect({
   value,
   onChange,
-  clientId,
+  faenaId,
   disabled,
   className,
 }: {
   value: number | null | undefined;
   onChange: (roomId: number | null) => void;
   /** Acota los campamentos al cliente de la empresa del trabajador. */
-  clientId?: number;
+  faenaId?: number;
   disabled?: boolean;
   className?: string;
 }) {
   const [campId, setCampId] = useState<number | null>(null);
 
   const { data: campsPage } = useCamps({
-    client_id: clientId,
+    faena_id: faenaId,
     is_active: true,
     limit: CAMPS_SELECT_LIMIT,
   });

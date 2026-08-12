@@ -5,13 +5,15 @@ import { parseApiError } from "@/lib/api/errors";
 
 import type { components } from "@/lib/api/schema";
 
+type FaenaOut = components["schemas"]["FaenaOut"];
+type FaenaIn = components["schemas"]["FaenaIn"];
 type CampOut = components["schemas"]["CampOut"];
 type CampIn = components["schemas"]["CampIn"];
 type RoomOut = components["schemas"]["RoomOut"];
 type RoomIn = components["schemas"]["RoomIn"];
 
 export type CampFilters = {
-  client_id?: number;
+  faena_id?: number;
   search?: string;
   is_active?: boolean;
   limit?: number;
@@ -20,12 +22,64 @@ export type CampFilters = {
 
 export type RoomFilters = {
   camp_id?: number;
-  client_id?: number;
+  faena_id?: number;
   search?: string;
   is_active?: boolean;
   limit?: number;
   offset?: number;
 };
+
+export const faenasKeys = {
+  all: ["faenas"] as const,
+};
+
+/**
+ * Faenas: el sitio físico dueño de los campamentos y de los QR de puerta.
+ * Son muy pocas —hoy solo Peñón— así que se listan sin paginar ni filtrar.
+ */
+export function useFaenas() {
+  return useQuery({
+    queryKey: faenasKeys.all,
+    queryFn: async () => {
+      const { data, error } = await api.GET("/api/faenas/", {
+        params: { query: { limit: 100 } },
+      });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function useCreateFaena() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: FaenaIn) => {
+      const { data, error } = await api.POST("/api/faenas/", { body });
+      if (error) throw parseApiError(error);
+      return data as FaenaOut;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: faenasKeys.all });
+    },
+  });
+}
+
+export function useUpdateFaena(faenaId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: FaenaIn) => {
+      const { data, error } = await api.PUT("/api/faenas/{faena_id}", {
+        params: { path: { faena_id: faenaId } },
+        body,
+      });
+      if (error) throw parseApiError(error);
+      return data as FaenaOut;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: faenasKeys.all });
+    },
+  });
+}
 
 export const campsKeys = {
   all: ["camps"] as const,

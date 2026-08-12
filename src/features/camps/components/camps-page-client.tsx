@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { DoorClosed, Tent } from "lucide-react";
+import { DoorClosed, Pickaxe, Tent } from "lucide-react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CampsTable } from "@/features/camps/components/camps-table";
+import { FaenasTable } from "@/features/camps/components/faenas-table";
 import { RoomsTable } from "@/features/camps/components/rooms-table";
 
 export function CampsPageClient() {
@@ -14,6 +15,12 @@ export function CampsPageClient() {
   return (
     <Tabs value={tab} onValueChange={setTab} className="gap-6">
       <TabsList variant="line">
+        {/* El orden refleja la jerarquía física: la faena contiene
+            campamentos, y el campamento contiene puertas. */}
+        <TabsTrigger value="faenas">
+          <Pickaxe />
+          Faenas
+        </TabsTrigger>
         <TabsTrigger value="camps">
           <Tent />
           Campamentos
@@ -24,6 +31,9 @@ export function CampsPageClient() {
         </TabsTrigger>
       </TabsList>
 
+      <TabsContent value="faenas">
+        <FaenasTable />
+      </TabsContent>
       <TabsContent value="camps">
         <CampsTable
           onVerRooms={(id) => {

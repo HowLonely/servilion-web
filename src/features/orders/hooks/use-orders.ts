@@ -8,6 +8,8 @@ import type { components } from "@/lib/api/schema";
 type LaundryOrderOut = components["schemas"]["LaundryOrderOut"];
 type LaundryOrderIn = components["schemas"]["LaundryOrderIn"];
 type PackingProgressOut = components["schemas"]["PackingProgressOut"];
+type PackingScanOut = components["schemas"]["PackingScanOut"];
+type AmbiguousReferenceOut = components["schemas"]["AmbiguousReferenceOut"];
 
 export type OrderFilters = {
   status?: string;
@@ -27,6 +29,7 @@ export const ordersKeys = {
   detail: (id: number) => ["orders", "detail", id] as const,
   packing: (id: number) => ["orders", "packing", id] as const,
   receipt: (id: number) => ["orders", "receipt", id] as const,
+  labels: (id: number) => ["orders", "labels", id] as const,
   counters: ["orders", "counters"] as const,
 };
 
@@ -130,6 +133,71 @@ export function useFindOrderByCode() {
       return data as LaundryOrderOut;
     },
   });
+}
+
+// Etiquetas lavables a imprimir, una por prenda declarada en la guía. Se pegan
+// a cada prenda al digitalizar la OT y son las que se pistolean al empacar.
+export function useGarmentLabels(orderId: number) {
+  return useQuery({
+    queryKey: ordersKeys.labels(orderId),
+    queryFn: async () => {
+      const { data, error } = await api.GET(
+        "/api/orders/{order_id}/garment-labels",
+        { params: { path: { order_id: orderId } } },
+      );
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+/**
+ * Pistoleo único de la mesa de empaque: un solo código resuelve todo.
+ *
+ * La boleta abre el morral y lo cierra; la etiqueta lavable de una prenda abre
+ * el morral (si hacía falta) y marca la prenda en el mismo disparo. El backend
+ * decide la acción, así que aquí no hay modos ni estado que sincronizar.
+ */
+export function usePackingCodeScan() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: { code: string; quantity: number }) => {
+      const { data, error } = await api.POST("/api/orders/scan/packing", {
+        body,
+      });
+      // `parseApiError` devuelve el cuerpo tal cual, así que el 409 conserva
+      // sus `candidates` para que la UI ofrezca elegir (ver isAmbiguousReference).
+      if (error) throw parseApiError(error);
+      return data as PackingScanOut;
+    },
+    onSuccess: (result) => {
+      queryClient.setQueryData(
+        ordersKeys.packing(result.order.id),
+        result.progress,
+      );
+      queryClient.invalidateQueries({
+        queryKey: ordersKeys.detail(result.order.id),
+      });
+      queryClient.invalidateQueries({ queryKey: ["orders", "list"] });
+    },
+  });
+}
+
+/**
+ * El 409 del pistoleo no es un error a mostrar y ya: el `ref` se resetea cada
+ * semana, así que puede calzar con más de un morral abierto. El backend manda
+ * las guías candidatas para que el operador reconozca la suya por trabajador y
+ * empresa, que es lo que tiene a la vista.
+ */
+export function isAmbiguousReference(
+  error: unknown,
+): error is AmbiguousReferenceOut {
+  return (
+    !!error &&
+    typeof error === "object" &&
+    "candidates" in error &&
+    Array.isArray((error as AmbiguousReferenceOut).candidates)
+  );
 }
 
 // La recepción en lavandería no es una acción aparte: ocurre al ingresar la

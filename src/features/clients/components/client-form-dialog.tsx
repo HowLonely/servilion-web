@@ -40,6 +40,7 @@ function defaultValuesFor(client?: ClientOut): ClientFormValues {
   return {
     name: client?.name ?? "",
     tax_id: client?.tax_id ?? "",
+    reference_prefix: client?.reference_prefix ?? "",
     contact_name: client?.contact_name ?? "",
     phone: client?.phone ?? "",
   };
@@ -111,6 +112,23 @@ export function ClientFormDialog({
               <FieldContent>
                 <Input id="tax_id" {...register("tax_id")} />
                 <FieldError errors={[errors.tax_id]} />
+              </FieldContent>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="reference_prefix">Prefijo del ref</FieldLabel>
+              <FieldContent>
+                <Input
+                  id="reference_prefix"
+                  maxLength={3}
+                  placeholder="P"
+                  {...register("reference_prefix")}
+                />
+                <FieldError errors={[errors.reference_prefix]} />
+                <p className="text-xs text-muted-foreground">
+                  Antecede al correlativo que se imprime en la etiqueta lavable
+                  (la “P” de P1375A). Si se deja vacío se usa la inicial del
+                  nombre.
+                </p>
               </FieldContent>
             </Field>
             <Field>

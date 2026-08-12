@@ -274,6 +274,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/faenas/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Faenas */
+        get: operations["camps_api_list_faenas"];
+        put?: never;
+        /**
+         * Create Faena
+         * @description Crear una faena es excepcional: solo al empezar a atender un sitio nuevo.
+         */
+        post: operations["camps_api_create_faena"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/faenas/{faena_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Faena */
+        get: operations["camps_api_get_faena"];
+        /** Update Faena */
+        put: operations["camps_api_update_faena"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/camps/": {
         parameters: {
             query?: never;
@@ -386,6 +425,30 @@ export interface paths {
          * @description Pistoleo del morral sucio en faena (paso 2), previo a la digitalización.
          */
         post: operations["orders_api_register_site_reception"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/scan/packing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Scan Packing Code
+         * @description Pistoleo único de la mesa de empaque (paso 6).
+         *
+         *     Un solo endpoint para los dos códigos que hay sobre la mesa: la boleta del
+         *     morral abre y cierra, y la etiqueta lavable de una prenda abre y marca en el
+         *     mismo disparo. El operador no elige modo en pantalla.
+         */
+        post: operations["orders_api_scan_packing_code"];
         delete?: never;
         options?: never;
         head?: never;
@@ -535,6 +598,26 @@ export interface paths {
          * @description Datos de la boleta impresa que acompaña el morral limpio de vuelta a faena.
          */
         get: operations["orders_api_get_receipt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/{order_id}/garment-labels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Garment Labels
+         * @description Etiquetas lavables a imprimir, una por prenda declarada en la guía (paso 4).
+         */
+        get: operations["orders_api_get_garment_labels"];
         put?: never;
         post?: never;
         delete?: never;
@@ -735,6 +818,141 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/hospitality/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Batches */
+        get: operations["hospitality_api_list_batches"];
+        put?: never;
+        /**
+         * Create Batch
+         * @description Registra la llegada de una carga de lencería sucia del campamento.
+         */
+        post: operations["hospitality_api_create_batch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hospitality/counters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Counters
+         * @description Indicadores del servicio: lotes en planta, piezas y merma acumulada.
+         */
+        get: operations["hospitality_api_get_counters"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hospitality/{batch_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Batch */
+        get: operations["hospitality_api_get_batch"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hospitality/{batch_id}/note": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Batch Note
+         * @description Acta de devolución que el encargado del campamento revisa y firma.
+         */
+        get: operations["hospitality_api_get_batch_note"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hospitality/{batch_id}/process": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Processing */
+        post: operations["hospitality_api_start_processing"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hospitality/{batch_id}/return-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Register Return Count
+         * @description Cuenta de salida por tipo de lencería: es donde aparece la merma.
+         */
+        post: operations["hospitality_api_register_return_count"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hospitality/{batch_id}/dispatch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dispatch Batch
+         * @description Despacha la carga limpia de vuelta a faena y cierra el lote.
+         */
+        post: operations["hospitality_api_dispatch_batch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/operations/summary": {
         parameters: {
             query?: never;
@@ -906,6 +1124,8 @@ export interface components {
             name: string;
             /** Tax Id */
             tax_id: string;
+            /** Reference Prefix */
+            reference_prefix: string;
             /** Contact Name */
             contact_name: string;
             /** Phone */
@@ -933,6 +1153,11 @@ export interface components {
              * @default
              */
             tax_id: string;
+            /**
+             * Reference Prefix
+             * @default
+             */
+            reference_prefix: string;
             /**
              * Contact Name
              * @default
@@ -1024,10 +1249,10 @@ export interface components {
             tax_id: string;
             /** Billing Type */
             billing_type: string;
+            /** Service Type */
+            service_type: string;
             /** Delivery Flow */
             delivery_flow: string;
-            /** Reference Prefix */
-            reference_prefix: string;
             /** Contact Name */
             contact_name: string;
             /** Phone */
@@ -1061,15 +1286,15 @@ export interface components {
              */
             billing_type: string;
             /**
+             * Service Type
+             * @default PERSONAL
+             */
+            service_type: string;
+            /**
              * Delivery Flow
              * @default FLUJO_1
              */
             delivery_flow: string;
-            /**
-             * Reference Prefix
-             * @default
-             */
-            reference_prefix: string;
             /**
              * Contact Name
              * @default
@@ -1208,14 +1433,42 @@ export interface components {
              */
             is_active: boolean;
         };
+        /** FaenaOut */
+        FaenaOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Is Active */
+            is_active: boolean;
+            /** Camps Count */
+            camps_count: number;
+        };
+        /** PagedFaenaOut */
+        PagedFaenaOut: {
+            /** Items */
+            items: components["schemas"]["FaenaOut"][];
+            /** Count */
+            count: number;
+        };
+        /** FaenaIn */
+        FaenaIn: {
+            /** Name */
+            name: string;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+        };
         /** CampOut */
         CampOut: {
             /** Id */
             id: number;
-            /** Client Id */
-            client_id: number;
-            /** Client Name */
-            client_name: string;
+            /** Faena Id */
+            faena_id: number;
+            /** Faena Name */
+            faena_name: string;
             /** Name */
             name: string;
             /** Is Active */
@@ -1232,8 +1485,8 @@ export interface components {
         };
         /** CampIn */
         CampIn: {
-            /** Client Id */
-            client_id: number;
+            /** Faena Id */
+            faena_id: number;
             /** Name */
             name: string;
             /**
@@ -1257,8 +1510,8 @@ export interface components {
             camp_id: number;
             /** Camp Name */
             camp_name: string;
-            /** Client Id */
-            client_id: number;
+            /** Faena Id */
+            faena_id: number;
             /** Number */
             number: string;
             /**
@@ -1318,6 +1571,8 @@ export interface components {
             company_id: number;
             /** Company Name */
             company_name: string;
+            /** Company Logo Url */
+            company_logo_url: string | null;
             /** Client Id */
             client_id: number;
             /** Client Name */
@@ -1526,6 +1781,89 @@ export interface components {
              */
             note: string;
         };
+        /** PackingItemProgressOut */
+        PackingItemProgressOut: {
+            /** Item Id */
+            item_id: number;
+            /** Garment Type Id */
+            garment_type_id: number | null;
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
+            /** Quantity */
+            quantity: number;
+            /** Scanned Quantity */
+            scanned_quantity: number;
+        };
+        /** PackingProgressOut */
+        PackingProgressOut: {
+            /** Order Id */
+            order_id: number;
+            /** Declared Total */
+            declared_total: number;
+            /** Scanned Total */
+            scanned_total: number;
+            /** Is Complete */
+            is_complete: boolean;
+            /** Items */
+            items: components["schemas"]["PackingItemProgressOut"][];
+        };
+        /**
+         * PackingScanOut
+         * @description Qué hizo el pistoleo: abrió el morral, lo cerró o marcó una prenda.
+         */
+        PackingScanOut: {
+            /** Action */
+            action: string;
+            order: components["schemas"]["LaundryOrderOut"];
+            progress: components["schemas"]["PackingProgressOut"];
+        };
+        /**
+         * AmbiguousOrderOut
+         * @description Guía candidata cuando un `ref` calza con más de un morral abierto.
+         */
+        AmbiguousOrderOut: {
+            /** Order Id */
+            order_id: number;
+            /** Order Number */
+            order_number: string | null;
+            /** Reference */
+            reference: string;
+            /** Worker Name */
+            worker_name: string;
+            /** Company Name */
+            company_name: string;
+            /** Status */
+            status: string;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+        };
+        /** AmbiguousReferenceOut */
+        AmbiguousReferenceOut: {
+            /** Detail */
+            detail: string;
+            /** Reference */
+            reference: string;
+            /** Candidates */
+            candidates: components["schemas"]["AmbiguousOrderOut"][];
+        };
+        /**
+         * PackingCodeScanIn
+         * @description Pistoleo único de la mesa de empaque: boleta del morral o etiqueta lavable.
+         */
+        PackingCodeScanIn: {
+            /** Code */
+            code: string;
+            /**
+             * Quantity
+             * @default 1
+             */
+            quantity: number;
+        };
         /** SiteCountersOut */
         SiteCountersOut: {
             /** Dispatched */
@@ -1727,8 +2065,12 @@ export interface components {
             ticket_number: string;
             /** Company Name */
             company_name: string;
+            /** Company Logo Url */
+            company_logo_url: string | null;
             /** Worker Name */
             worker_name: string;
+            /** Phone */
+            phone: string;
             /** National Id */
             national_id: string;
             /** Camp */
@@ -1748,6 +2090,32 @@ export interface components {
             /** Items */
             items: components["schemas"]["ReceiptItemOut"][];
         };
+        /**
+         * GarmentLabelOut
+         * @description Etiqueta lavable de una prenda: una por línea declarada en la guía.
+         */
+        GarmentLabelOut: {
+            /** Order Id */
+            order_id: number;
+            /** Order Number */
+            order_number: string | null;
+            /** Reference */
+            reference: string;
+            /** Label Code */
+            label_code: string;
+            /** Scan Payload */
+            scan_payload: string;
+            /** Garment Name */
+            garment_name: string;
+            /** Worker Name */
+            worker_name: string;
+            /** Company Name */
+            company_name: string;
+            /** Camp */
+            camp: string;
+            /** Quantity */
+            quantity: number;
+        };
         /** StatusUpdateIn */
         StatusUpdateIn: {
             /** Status */
@@ -1757,34 +2125,6 @@ export interface components {
              * @default
              */
             note: string;
-        };
-        /** PackingItemProgressOut */
-        PackingItemProgressOut: {
-            /** Item Id */
-            item_id: number;
-            /** Garment Type Id */
-            garment_type_id: number | null;
-            /** Code */
-            code: string;
-            /** Name */
-            name: string;
-            /** Quantity */
-            quantity: number;
-            /** Scanned Quantity */
-            scanned_quantity: number;
-        };
-        /** PackingProgressOut */
-        PackingProgressOut: {
-            /** Order Id */
-            order_id: number;
-            /** Declared Total */
-            declared_total: number;
-            /** Scanned Total */
-            scanned_total: number;
-            /** Is Complete */
-            is_complete: boolean;
-            /** Items */
-            items: components["schemas"]["PackingItemProgressOut"][];
         };
         /**
          * PackingScanIn
@@ -1851,6 +2191,289 @@ export interface components {
         PhotoConfirmIn: {
             /** Object Key */
             object_key: string;
+        };
+        /** DeliveryConfirmOut */
+        DeliveryConfirmOut: {
+            order: components["schemas"]["LaundryOrderOut"];
+            scanned_room: components["schemas"]["DeliveryRoomOut"];
+            expected_room: components["schemas"]["DeliveryRoomOut"] | null;
+            /** Room Matched */
+            room_matched: boolean;
+            /**
+             * Delivered At
+             * Format: date-time
+             */
+            delivered_at: string;
+        };
+        /** DeliveryRoomOut */
+        DeliveryRoomOut: {
+            /** Id */
+            id: number;
+            /** Number */
+            number: string;
+            /** Camp Name */
+            camp_name: string;
+            /**
+             * Qr Code
+             * Format: uuid
+             */
+            qr_code: string;
+        };
+        /**
+         * DeliveryMismatchOut
+         * @description 409: el QR escaneado no es la habitación de destino de la guía.
+         */
+        DeliveryMismatchOut: {
+            /** Detail */
+            detail: string;
+            scanned_room: components["schemas"]["DeliveryRoomOut"];
+            expected_room: components["schemas"]["DeliveryRoomOut"] | null;
+        };
+        /**
+         * DeliveryConfirmIn
+         * @description Payload del doble escaneo que hace la app al dejar el morral.
+         *
+         *     `order_code` es lo que va impreso en la etiqueta/boleta (n° de OT, `ref` o
+         *     código de control, indistintamente). `room_qr` es el UUID pegado en la
+         *     puerta.
+         */
+        DeliveryConfirmIn: {
+            /** Order Code */
+            order_code: string;
+            /**
+             * Room Qr
+             * Format: uuid
+             */
+            room_qr: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /** Delivered At */
+            delivered_at?: string | null;
+            /**
+             * Confirm Different Room
+             * @default false
+             */
+            confirm_different_room: boolean;
+        };
+        /** LinenBatchItemOut */
+        LinenBatchItemOut: {
+            /** Id */
+            id: number;
+            /** Garment Type Id */
+            garment_type_id: number | null;
+            /** Name */
+            name: string;
+            /** Quantity In */
+            quantity_in: number;
+            /** Quantity Out */
+            quantity_out: number | null;
+            /** Shortage */
+            shortage: number | null;
+            /** Weight Kg */
+            weight_kg: number | null;
+        };
+        /** LinenBatchOut */
+        LinenBatchOut: {
+            /** Id */
+            id: number;
+            /** Batch Number */
+            batch_number: string;
+            /** Company Id */
+            company_id: number;
+            /** Company Name */
+            company_name: string;
+            /** Company Logo Url */
+            company_logo_url: string | null;
+            /** Camp Id */
+            camp_id: number | null;
+            /** Camp Name */
+            camp_name: string;
+            /** Status */
+            status: string;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /** Promised At */
+            promised_at: string | null;
+            /** Dispatched At */
+            dispatched_at: string | null;
+            /** Weight Kg */
+            weight_kg: number | null;
+            /** Observations */
+            observations: string;
+            /** Received By Client */
+            received_by_client: string;
+            /** Items */
+            items: components["schemas"]["LinenBatchItemOut"][];
+            /** Total In */
+            total_in: number;
+            /** Total Out */
+            total_out: number | null;
+            /** Shortage */
+            shortage: number | null;
+            /** Is Counted */
+            is_counted: boolean;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** PagedLinenBatchOut */
+        PagedLinenBatchOut: {
+            /** Items */
+            items: components["schemas"]["LinenBatchOut"][];
+            /** Count */
+            count: number;
+        };
+        /** LinenBatchIn */
+        LinenBatchIn: {
+            /** Company Id */
+            company_id: number;
+            /** Camp Id */
+            camp_id?: number | null;
+            /** Received At */
+            received_at?: string | null;
+            /** Promised At */
+            promised_at?: string | null;
+            /** Weight Kg */
+            weight_kg?: number | null;
+            /**
+             * Observations
+             * @default
+             */
+            observations: string;
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["LinenBatchItemIn"][];
+        };
+        /**
+         * LinenBatchItemIn
+         * @description Una línea de la carga: tipo de lencería y cuánto entró.
+         *
+         *     `garment_type_id` es opcional porque el campamento manda lencería que no
+         *     siempre está en el catálogo; en ese caso llega `custom_name`.
+         */
+        LinenBatchItemIn: {
+            /** Garment Type Id */
+            garment_type_id?: number | null;
+            /**
+             * Custom Name
+             * @default
+             */
+            custom_name: string;
+            /** Quantity In */
+            quantity_in: number;
+            /** Weight Kg */
+            weight_kg?: number | null;
+        };
+        /** HospitalityCountersOut */
+        HospitalityCountersOut: {
+            /** Batches */
+            batches: number;
+            /** In Plant */
+            in_plant: number;
+            /** Dispatched */
+            dispatched: number;
+            /** Weight Kg */
+            weight_kg: number | null;
+            /** Pieces In */
+            pieces_in: number;
+            /** Pieces Out */
+            pieces_out: number;
+            /** Shortage */
+            shortage: number;
+            /** Shortage Rate */
+            shortage_rate: number | null;
+        };
+        /** BatchNoteItemOut */
+        BatchNoteItemOut: {
+            /** Item Id */
+            item_id: number;
+            /** Name */
+            name: string;
+            /** Quantity In */
+            quantity_in: number;
+            /** Quantity Out */
+            quantity_out: number | null;
+            /** Shortage */
+            shortage: number | null;
+        };
+        /**
+         * BatchNoteOut
+         * @description Acta de devolución que acompaña la carga limpia de vuelta a faena.
+         */
+        BatchNoteOut: {
+            /** Batch Number */
+            batch_number: string;
+            /** Company Name */
+            company_name: string;
+            /** Company Logo Url */
+            company_logo_url: string | null;
+            /** Camp */
+            camp: string;
+            /** Status */
+            status: string;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /** Promised At */
+            promised_at: string | null;
+            /** Dispatched At */
+            dispatched_at: string | null;
+            /** Weight Kg */
+            weight_kg: number | null;
+            /** Received By Client */
+            received_by_client: string;
+            /** Observations */
+            observations: string;
+            /** Items */
+            items: components["schemas"]["BatchNoteItemOut"][];
+            /** Total In */
+            total_in: number;
+            /** Total Out */
+            total_out: number | null;
+            /** Shortage */
+            shortage: number | null;
+            /** Is Counted */
+            is_counted: boolean;
+        };
+        /** ReturnCountBatchIn */
+        ReturnCountBatchIn: {
+            /** Counts */
+            counts: components["schemas"]["ReturnCountIn"][];
+        };
+        /**
+         * ReturnCountIn
+         * @description Cuántas piezas de una línea volvieron del lavado.
+         */
+        ReturnCountIn: {
+            /** Item Id */
+            item_id: number;
+            /** Quantity Out */
+            quantity_out: number;
+        };
+        /** DispatchIn */
+        DispatchIn: {
+            /**
+             * Received By Client
+             * @default
+             */
+            received_by_client: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
         };
         /** AgingBucket */
         AgingBucket: {
@@ -2729,10 +3352,107 @@ export interface operations {
             };
         };
     };
+    camps_api_list_faenas: {
+        parameters: {
+            query?: {
+                search?: string | null;
+                is_active?: boolean | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedFaenaOut"];
+                };
+            };
+        };
+    };
+    camps_api_create_faena: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FaenaIn"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FaenaOut"];
+                };
+            };
+        };
+    };
+    camps_api_get_faena: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                faena_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FaenaOut"];
+                };
+            };
+        };
+    };
+    camps_api_update_faena: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                faena_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FaenaIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FaenaOut"];
+                };
+            };
+        };
+    };
     camps_api_list_camps: {
         parameters: {
             query?: {
-                client_id?: number | null;
+                faena_id?: number | null;
                 search?: string | null;
                 is_active?: boolean | null;
                 limit?: number;
@@ -2851,7 +3571,7 @@ export interface operations {
         parameters: {
             query?: {
                 camp_id?: number | null;
-                client_id?: number | null;
+                faena_id?: number | null;
                 search?: string | null;
                 is_active?: boolean | null;
                 limit?: number;
@@ -3040,6 +3760,57 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SiteScanOut"];
+                };
+            };
+        };
+    };
+    orders_api_scan_packing_code: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PackingCodeScanIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PackingScanOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AmbiguousReferenceOut"];
                 };
             };
         };
@@ -3234,6 +4005,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReceiptOut"];
+                };
+            };
+        };
+    };
+    orders_api_get_garment_labels: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GarmentLabelOut"][];
                 };
             };
         };
@@ -3569,6 +4362,235 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DeliveryMismatchOut"];
+                };
+            };
+        };
+    };
+    hospitality_api_list_batches: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                company_id?: number | null;
+                search?: string | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedLinenBatchOut"];
+                };
+            };
+        };
+    };
+    hospitality_api_create_batch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinenBatchIn"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinenBatchOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+        };
+    };
+    hospitality_api_get_counters: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HospitalityCountersOut"];
+                };
+            };
+        };
+    };
+    hospitality_api_get_batch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinenBatchOut"];
+                };
+            };
+        };
+    };
+    hospitality_api_get_batch_note: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BatchNoteOut"];
+                };
+            };
+        };
+    };
+    hospitality_api_start_processing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinenBatchOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+        };
+    };
+    hospitality_api_register_return_count: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReturnCountBatchIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinenBatchOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+        };
+    };
+    hospitality_api_dispatch_batch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DispatchIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinenBatchOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
                 };
             };
         };

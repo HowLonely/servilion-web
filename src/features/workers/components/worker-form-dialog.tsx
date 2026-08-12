@@ -31,7 +31,6 @@ import {
 } from "@/components/ui/select";
 import { applyServerErrors, parseApiError } from "@/lib/api/errors";
 import { CompanySelect } from "@/features/companies/components/company-select";
-import { useCompany } from "@/features/companies/hooks/use-companies";
 import { RoomSelect } from "@/features/camps/components/room-select";
 import {
   useCreateWorker,
@@ -86,11 +85,6 @@ export function WorkerFormDialog({
     resolver: zodResolver(workerSchema),
     defaultValues: defaultValuesFor(worker),
   });
-
-  // El cliente sale de la empresa elegida: acota los camps a su faena y
-  // evita asignarle al trabajador una pieza de otro cliente.
-  const companyId = watch("company_id");
-  const { data: company } = useCompany(companyId > 0 ? companyId : undefined);
 
   useEffect(() => {
     if (open) reset(defaultValuesFor(worker));
@@ -156,12 +150,15 @@ export function WorkerFormDialog({
             <Field>
               <FieldLabel>Campamento y habitación</FieldLabel>
               <FieldContent>
+                {/* Sin filtrar por faena: la habitación es del sitio físico,
+                    no de la empresa del trabajador, y una contratista puede
+                    alojar gente en cualquier campamento. El propio selector
+                    acota por campamento antes de listar piezas. */}
                 <RoomSelect
                   value={watch("current_room_id")}
                   onChange={(roomId) =>
                     setValue("current_room_id", roomId)
                   }
-                  clientId={company?.client_id}
                 />
                 <FieldError errors={[errors.current_room_id]} />
               </FieldContent>

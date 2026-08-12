@@ -35,7 +35,17 @@ type PackingItemProgressOut = components["schemas"]["PackingItemProgressOut"];
 // arma el morral, pistolear suma al conteo; si la guía ya quedó Incompleta
 // (se cerró el empaque y faltó algo), pistolear la prenda que reapareció la
 // resuelve directo como "Encontrada" — no hay un formulario aparte para eso.
-export function PackingPanel({ order }: { order: LaundryOrderOut }) {
+// `showScanner` lo apaga la estación de empaque, que ya tiene su propio input
+// unificado arriba: dos cajas de escaneo en la misma pantalla se roban el foco
+// entre sí, y el lector escribe donde esté puesto. En el detalle de la OT, en
+// cambio, este panel es el único escáner y lo mantiene.
+export function PackingPanel({
+  order,
+  showScanner = true,
+}: {
+  order: LaundryOrderOut;
+  showScanner?: boolean;
+}) {
   const { user } = useAuth();
   const canPack = roleCanPack(user?.role);
   const isPackingStage = ["RECIBIDA", "EN_REVISION", "INCOMPLETA"].includes(
@@ -130,6 +140,7 @@ export function PackingPanel({ order }: { order: LaundryOrderOut }) {
   return (
     <Card className="flex flex-col gap-5 p-5">
       {/* Escaneo de prendas */}
+      {showScanner && (
       <div className="flex flex-col gap-2">
         <label htmlFor="prenda-code" className="text-sm font-semibold tracking-tight">
           {isIncomplete
@@ -190,6 +201,7 @@ export function PackingPanel({ order }: { order: LaundryOrderOut }) {
           </p>
         )}
       </div>
+      )}
 
       {/* Progreso + lista única de prendas (declaradas, pistoleadas y, si
           falta alguna, la acción para resolverla) */}
