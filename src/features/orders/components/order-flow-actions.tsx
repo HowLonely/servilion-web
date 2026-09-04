@@ -30,14 +30,16 @@ export function OrderFlowActions({ order }: { order: LaundryOrderOut }) {
   // trabajan en planta y no intervienen aquí.
   const canRunFlow = canRunFieldFlow(user?.role);
 
-  // Repetible: si la guía salió incompleta y la prenda faltante viaja después
-  // en un envío aparte, cada llegada física a faena se marca por separado.
-  const showCleanReception =
-    (order.status === "COMPLETADA" || order.status === "INCOMPLETA") &&
-    canRunFlow;
+  // Ambos hitos arrancan del despacho: hasta que el morral no sale de planta
+  // no puede haber llegado a faena. Antes se aceptaba COMPLETADA/INCOMPLETA
+  // solo porque no existía un estado que significara "salió de planta".
+  //
+  // La llegada es repetible: si la guía salió incompleta y la prenda faltante
+  // viaja después en un envío aparte, cada llegada se marca por separado.
+  const showCleanReception = order.status === "DESPACHADA" && canRunFlow;
   const showDelivery =
     order.delivery_flow !== "FLUJO_2" &&
-    order.status === "COMPLETADA" &&
+    order.status === "DESPACHADA" &&
     order.clean_receptions.length > 0 &&
     canRunFlow;
 

@@ -30,7 +30,7 @@ export function OrderStatusActions({
   currentStatus: string;
   deliveryFlow: string;
 }) {
-  // En Flujo 2 no existe la entrega en habitación, así que COMPLETADA es el
+  // En Flujo 2 no existe la entrega en habitación, así que DESPACHADA es el
   // estado terminal: no hay ningún botón manual siguiente que ofrecer.
   // ENTREGADA se omite a propósito (Flujo 1): la entrega se registra en
   // `OrderFlowActions`, que exige la recepción previa del morral limpio en
@@ -104,7 +104,9 @@ function StatusTransitionButton({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Marcar OT como despachada incompleta</DialogTitle>
+          <DialogTitle>
+            Marcar OT como {ORDER_STATUS_LABELS[targetStatus]}
+          </DialogTitle>
         </DialogHeader>
         <Textarea
           placeholder="Describe qué prenda falta o sobra..."

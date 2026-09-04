@@ -112,6 +112,7 @@ export function ClientsTable() {
           <TableHeader>
             <TableRow>
               <TableHead>Nombre</TableHead>
+              <TableHead>Faena</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Empresas</TableHead>
               <TableHead>RUT</TableHead>
@@ -124,14 +125,14 @@ export function ClientsTable() {
             {isLoading &&
               Array.from({ length: 4 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={7}>
+                  <TableCell colSpan={8}>
                     <Skeleton className="h-6 w-full" />
                   </TableCell>
                 </TableRow>
               ))}
             {!isLoading && clients?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                <TableCell colSpan={8} className="text-center text-muted-foreground">
                   No se encontraron clientes.
                 </TableCell>
               </TableRow>
@@ -170,6 +171,13 @@ function ClientRow({
   return (
     <TableRow>
       <TableCell className="font-medium">{client.name}</TableCell>
+      <TableCell>
+        {/* Sin faena la etiqueta cae a la del campamento de destino, que no
+            existe en Flujo 2: por eso se marca como pendiente y no como vacío. */}
+        {client.faena_name || (
+          <span className="text-muted-foreground">Sin configurar</span>
+        )}
+      </TableCell>
       <TableCell>
         {/* is_single_company marca el caso "el cliente es la misma empresa". */}
         <Badge variant={client.is_single_company ? "secondary" : "outline"}>

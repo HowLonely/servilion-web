@@ -21,11 +21,30 @@ export const SERVICE_TYPE_LABELS: Record<
   HOTELERIA: "Lencería de hotelería",
 };
 
+// Qué es la empresa dentro de su cliente. MANDANTE es la empresa del propio
+// cliente (se le lava directo, ej. "Panam Peñón" en el cliente "Panam Peñón");
+// CONTRATISTA trabaja para ese cliente en la misma faena (Sodexo, Metso, Orica
+// en Peñón). Solo cambia lo que se imprime: la etiqueta lavable y la boleta
+// llevan la palabra "Contratista"; el cobro y el catálogo siguen siendo del
+// cliente para ambas.
+export const CLIENT_ROLES = ["MANDANTE", "CONTRATISTA"] as const;
+
+export const CLIENT_ROLE_LABELS: Record<(typeof CLIENT_ROLES)[number], string> =
+  {
+    MANDANTE: "Mandante · se lava directo al cliente",
+    CONTRATISTA: "Contratista",
+  };
+
 export const companySchema = z.object({
   name: z.string().min(1, "El nombre es obligatorio."),
   // Vacío (null) => el backend crea un cliente 1:1 con el mismo nombre (caso
   // "el cliente es la misma empresa").
   client_id: z.number().nullable(),
+  // Solo viaja cuando client_id es null: es la faena del cliente 1:1 que el
+  // backend crea junto a la empresa. Con un cliente existente, la faena ya está
+  // definida en su ficha y este valor se ignora.
+  faena_id: z.number().nullable(),
+  client_role: z.enum(CLIENT_ROLES),
   tax_id: z.string(),
   billing_type: z.enum(BILLING_TYPES),
   service_type: z.enum(SERVICE_TYPES),

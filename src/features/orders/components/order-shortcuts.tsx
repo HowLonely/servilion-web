@@ -41,11 +41,19 @@ const SHORTCUTS = [
   },
   {
     href: "/orders?status=COMPLETADA",
+    icon: PackageCheck,
+    tone: "text-sky-600 bg-sky-50 dark:text-sky-300 dark:bg-sky-400/10",
+    title: "Pendientes de despacho",
+    description:
+      "Morrales cerrados que siguen en planta; pistolea la boleta al cargarlos.",
+  },
+  {
+    href: "/orders?status=DESPACHADA",
     icon: Warehouse,
     tone: "text-cyan-600 bg-cyan-50 dark:text-cyan-300 dark:bg-cyan-400/10",
     title: "Pendientes de llegada a faena",
     description:
-      "Morrales completados; confirma en la OT cuando llegan a faena.",
+      "Morrales ya despachados; confirma en la OT cuando llegan a faena.",
   },
 ];
 

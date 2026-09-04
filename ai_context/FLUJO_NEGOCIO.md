@@ -12,9 +12,11 @@ Este documento describe el **flujo operativo real** del negocio. La versión ant
 | Actor | Qué es | Modelo en el backend |
 |---|---|---|
 | **Servilion** | La empresa que opera la lavandería (dueña de este sistema). | — (implícito) |
-| **Empresa contratista/mandante** | Cliente de Servilion. Tiene trabajadores en la faena cuya ropa se lava. Ej: SODEXO PEÑÓN, METSO OUTOTEC, ORICA, MASTER DRILLING. | `companies.Company` |
+| **Cliente** | A quién se le factura. Agrupa a todas las empresas que operan en una misma faena: la del propio cliente y sus contratistas. Ej: PANAM PEÑÓN, que opera en la faena Peñón. | `companies.Client` (con `faena`) |
+| **Empresa contratista/mandante** | Empresa cuyos trabajadores usan el servicio; hereda la faena de su cliente. `client_role` distingue la empresa del propio cliente (`MANDANTE`, se le lava directo) de las contratistas (`CONTRATISTA`), que llevan la palabra "Contratista" impresa en la etiqueta lavable y en la boleta. Ej: SODEXO PEÑÓN, METSO OUTOTEC, ORICA, MASTER DRILLING. | `companies.Company` |
 | **Trabajador** | Empleado de una empresa contratista. Entrega y recibe su ropa en un **morral**. Vive en un campamento/módulo de la faena. **No es usuario del sistema.** | `workers.Worker` |
 | **Supervisor Servilion en faena** | Recibe los morrales sucios del trabajador, coordina el traslado a Antofagasta y, al regreso, verifica la recepción de ropa limpia. | `authentication.User` (rol `SUPERVISOR`) |
+| **Operador de báscula (Antofagasta)** | Recibe el camión, pesa el morral sucio, cuenta sus prendas e imprime las etiquetas. Es puesto propio y no una variante del digitador: es otra estación física y la opera otra persona. | `authentication.User` (rol `PESAJE`) |
 | **Operador en faena (app PEÑON)** | Pistolea recepciones y entregas en campamento. Pantalla con contadores de entregados/despachados. | App de faena → sync con backend |
 | **Staff de lavandería (Antofagasta)** | Digitaliza la OT, pistolea prendas, revisa, pesa, empaqueta y valida el morral antes del despacho. | `authentication.User` (roles `RECEPCION`, `LAVANDERIA`, `DESPACHO`, `ADMIN`) |
 | **Repartidor en faena (app Android)** | Entrega el morral limpio al trabajador en su habitación escaneando QR. Opera offline. | App móvil → sync con backend |
@@ -151,20 +153,36 @@ El supervisor de Servilion en faena recibe los morrales y gestiona su llegada a 
 
 - Este traslado **no tiene lógica en el sistema** — es logística física pura.
 
-### Paso 4 — Digitalización en Antofagasta
+### Paso 4a — Pesaje y etiquetado en la báscula de recepción
 
-Al llegar los morrales a Antofagasta, el staff **digitaliza la guía en el sistema**:
+Es **lo primero** que le pasa al morral al llegar a Antofagasta, antes de digitalizar nada. Lo opera quien recibe el camión (rol `PESAJE`), en una estación física propia: una balanza, una pantalla táctil y una etiquetera.
 
-1. Ingresa la OT que viene en el documento físico (`digitadopor`).
-2. **Pistoléa prenda por prenda**, corroborando que coinciden con lo declarado en la OT física.
-3. Si falta o sobra algo, registra `observacion`.
-4. El sistema genera automáticamente el `ref` (inicial de faena/empresa + número que **se resetea a 1000 cada semana** e incrementa).
-5. Se imprimen etiquetas lavables con el `ref` y se pegan en cada prenda.
-6. Se pesa el morral completo (`peso`) — no prenda por prenda.
-7. Se actualiza `rlavanderia` al pistoleo de recepción en lavandería.
-8. Un revisor registra su identidad (`revisadopor`).
+1. Se elige el **cliente** (a quién se le factura) y la **empresa** (de quién es la ropa, mandante o contratista).
+2. Se cuenta cuántas prendas trae el morral.
+3. Se pesa el morral completo — no prenda por prenda, y sin descontar tara.
+4. El sistema genera el **`ref`** (prefijo del cliente + correlativo de 1000 a 1999 + letra de ciclo).
+5. Se imprime **un adhesivo lavable por prenda** (`P1375A-01`, `P1375A-02`…) y se pega uno en cada prenda, más un **ticket maestro** que viaja dentro del morral hasta la mesa de digitación.
+
+> **El `ref` nace aquí y no al digitalizar.** Es lo que va impreso en los adhesivos que ya están pegados a la ropa: el identificador que viaja con la prenda tiene que ser el mismo que usa el resto del flujo. La contrapartida asumida es que un pesaje anulado quema su correlativo.
+
+> **En la báscula todavía no se sabe quién es el trabajador**: eso viene escrito en la OT física. Por eso el pesaje es un registro propio (`weighing.WeighIn`) y no una guía a medio llenar. Un morral puede además pesarse y no digitalizarse nunca; el kilo igual entró a la planta y queda contado.
 
 Este es el **punto de ingreso a la base de datos** (primer touchpoint del sistema de trazabilidad online).
+
+### Paso 4b — Digitalización en Antofagasta
+
+Con el morral ya pesado y etiquetado, el staff **digitaliza la guía**:
+
+1. Tipea el **ref del ticket de pesaje**; la guía hereda ese ref y el peso ya registrados.
+2. Ingresa la OT que viene en el documento físico (`digitadopor`).
+3. Declara el detalle por tipo de prenda, corroborando contra lo escrito en la OT física.
+4. Si falta o sobra algo, registra `observacion`.
+5. Se actualiza `rlavanderia` al ingresar la guía.
+6. Un revisor registra su identidad (`revisadopor`).
+
+Si el conteo real no coincide con el de la báscula, **manda el digitador**: la guía queda con el conteo real y el pesaje conserva el suyo, con la diferencia a la vista.
+
+> **El pesaje previo es opcional.** Un morral que no pasó por la báscula se digitaliza igual, generando su propio ref y sus etiquetas por tipo de prenda. Es la excepción, pero tiene que existir: si el pesaje fuera obligatorio, una etiquetera atascada detendría la planta entera.
 
 ### Paso 5 — Proceso en planta (sin intervención del sistema)
 
@@ -205,6 +223,17 @@ flowchart TD
 ### Paso 6 — Empaque del morral limpio
 
 Al reempacar la ropa limpia en el morral, el operador **pistoléa cada prenda** que carga al morral. El sistema valida que el morral quede **completo** respecto a lo declarado en la guía.
+
+Hay dos modos de validación, y los decide el origen de la guía:
+
+| Modo | Cuándo | Qué se pistolea | Qué dice al faltar algo |
+|---|---|---|---|
+| **Por unidad** | La guía viene de un pesaje | Cada adhesivo (`P1375A-03`), una sola vez | "falta la 05" |
+| **Por tipo** | La guía se digitalizó sin báscula | El código del tipo (`P1375A-TOA`), tantas veces como unidades vuelvan | "faltan 2 poleras" |
+
+El modo por unidad cierra un agujero del esquema anterior: con un solo adhesivo por tipo se podía pistolear cuatro veces la **misma** polera y el sistema daba por vueltas las cuatro. Con una etiqueta por prenda física, el segundo disparo sobre la misma prenda es un duplicado detectable.
+
+En modo unidad el adhesivo no dice qué prenda es, así que el detalle por tipo declarado en la guía se sigue mostrando al lado: es lo que permite deducir qué buscar cuando falta la 05.
 
 - Este es el **segundo touchpoint** del almacenamiento online (verificación de prendas).
 - Al completarse, se genera/imprime la **boleta** con OT, ref, peso, fecha tentativa de entrega, QR y código de control.
