@@ -23,6 +23,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { applyServerErrors, parseApiError } from "@/lib/api/errors";
+import { FaenaSelect } from "@/features/camps/components/faena-select";
 import {
   useCreateClient,
   useUpdateClient,
@@ -40,6 +41,7 @@ function defaultValuesFor(client?: ClientOut): ClientFormValues {
   return {
     name: client?.name ?? "",
     tax_id: client?.tax_id ?? "",
+    faena_id: client?.faena_id ?? null,
     reference_prefix: client?.reference_prefix ?? "",
     contact_name: client?.contact_name ?? "",
     phone: client?.phone ?? "",
@@ -64,6 +66,8 @@ export function ClientFormDialog({
     handleSubmit,
     reset,
     setError,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<ClientFormValues>({
     resolver: zodResolver(clientSchema),
@@ -112,6 +116,21 @@ export function ClientFormDialog({
               <FieldContent>
                 <Input id="tax_id" {...register("tax_id")} />
                 <FieldError errors={[errors.tax_id]} />
+              </FieldContent>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="faena_id">Faena</FieldLabel>
+              <FieldContent>
+                <FaenaSelect
+                  value={watch("faena_id") ?? undefined}
+                  onChange={(faenaId) => setValue("faena_id", faenaId ?? null)}
+                />
+                <FieldError errors={[errors.faena_id]} />
+                <p className="text-xs text-muted-foreground">
+                  Dónde opera este cliente. La heredan todas sus empresas y es lo
+                  que se imprime en la etiqueta lavable y en la boleta. Si se deja
+                  vacía, se usa la faena del campamento al que va el morral.
+                </p>
               </FieldContent>
             </Field>
             <Field>

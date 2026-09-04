@@ -103,10 +103,11 @@ export function CompaniesTable() {
               <TableHead>Logo</TableHead>
               <TableHead>Nombre</TableHead>
               <TableHead>Cliente</TableHead>
+              <TableHead>Faena</TableHead>
+              <TableHead>Tipo</TableHead>
               <TableHead>RUT</TableHead>
               <TableHead>Cobro</TableHead>
               <TableHead>Modalidad</TableHead>
-              <TableHead>Ref</TableHead>
               <TableHead>Contacto</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead className="w-10" />
@@ -116,14 +117,14 @@ export function CompaniesTable() {
             {isLoading &&
               Array.from({ length: 4 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={10}>
+                  <TableCell colSpan={11}>
                     <Skeleton className="h-6 w-full" />
                   </TableCell>
                 </TableRow>
               ))}
             {!isLoading && companies?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={10} className="text-center text-muted-foreground">
+                <TableCell colSpan={11} className="text-center text-muted-foreground">
                   No se encontraron empresas.
                 </TableCell>
               </TableRow>
@@ -155,6 +156,18 @@ export function CompaniesTable() {
                   {company.client_name === company.name
                     ? "— (propia)"
                     : company.client_name}
+                </TableCell>
+                {/* La faena la hereda del cliente: acá se muestra, se edita en
+                    la ficha del cliente. */}
+                <TableCell>
+                  {company.faena_name || (
+                    <span className="text-muted-foreground">Sin configurar</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Badge variant={company.is_contractor ? "secondary" : "outline"}>
+                    {company.is_contractor ? "Contratista" : "Mandante"}
+                  </Badge>
                 </TableCell>
                 <TableCell>{company.tax_id || "—"}</TableCell>
                 <TableCell>

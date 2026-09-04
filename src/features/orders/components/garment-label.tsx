@@ -31,7 +31,8 @@ export function GarmentLabel({
   garmentName,
   workerName,
   companyName,
-  camp,
+  faena,
+  isContractor,
   quantity,
   className,
 }: {
@@ -41,7 +42,8 @@ export function GarmentLabel({
   garmentName: string;
   workerName: string;
   companyName: string;
-  camp: string;
+  faena: string;
+  isContractor: boolean;
   quantity: number;
   className?: string;
 }) {
@@ -56,10 +58,22 @@ export function GarmentLabel({
       )}
     >
       {/* Faena y empresa: ubican la prenda si la etiqueta se despega y aparece
-          suelta, pero no compiten con el ref. */}
-      <p className="w-full truncate text-center text-[9px] leading-none font-semibold tracking-[0.12em] uppercase text-neutral-500">
-        {[camp, companyName].filter(Boolean).join(" · ") || "—"}
-      </p>
+          suelta, pero no compiten con el ref.
+
+          La palabra "Contratista" va en negro sobre la línea gris porque es lo
+          único de esta franja que cambia una decisión: dice que el morral no es
+          del mandante de la faena aunque se lave y se facture bajo su cliente. */}
+      <div className="flex w-full items-baseline justify-center gap-1 text-[9px] leading-none font-semibold tracking-[0.12em] uppercase">
+        {/* `min-w-0` + `truncate` en la faena/empresa y `shrink-0` en la marca:
+            si el nombre no cabe se corta el nombre, nunca la palabra que dice
+            que el morral es de una contratista. */}
+        <p className="min-w-0 truncate text-neutral-500">
+          {[faena, companyName].filter(Boolean).join(" · ") || "—"}
+        </p>
+        {isContractor && (
+          <span className="shrink-0 font-black text-black">· Contratista</span>
+        )}
+      </div>
 
       {/* El ref y el código de prenda son lo que se lee de lejos entre las
           prendas sueltas de la mesa, así que van juntos y en el mayor tamaño

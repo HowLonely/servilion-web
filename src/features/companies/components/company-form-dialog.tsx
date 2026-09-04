@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { applyServerErrors, parseApiError } from "@/lib/api/errors";
+import { FaenaSelect } from "@/features/camps/components/faena-select";
 import { ClientSelect } from "@/features/clients/components/client-select";
 import {
   useCreateCompany,
@@ -37,6 +38,8 @@ import {
 } from "@/features/companies/hooks/use-companies";
 import {
   companySchema,
+  CLIENT_ROLES,
+  CLIENT_ROLE_LABELS,
   SERVICE_TYPES,
   SERVICE_TYPE_LABELS,
   type CompanyFormValues,
@@ -72,6 +75,9 @@ export function CompanyFormDialog({
     defaultValues: {
       name: company?.name ?? "",
       client_id: company?.client_id ?? null,
+      faena_id: company?.faena_id ?? null,
+      client_role:
+        (company?.client_role as "MANDANTE" | "CONTRATISTA") ?? "CONTRATISTA",
       tax_id: company?.tax_id ?? "",
       billing_type: (company?.billing_type as "PRENDAS" | "KILOS") ?? "PRENDAS",
       service_type:
@@ -88,6 +94,9 @@ export function CompanyFormDialog({
       reset({
         name: company?.name ?? "",
         client_id: company?.client_id ?? null,
+        faena_id: company?.faena_id ?? null,
+        client_role:
+          (company?.client_role as "MANDANTE" | "CONTRATISTA") ?? "CONTRATISTA",
         tax_id: company?.tax_id ?? "",
         billing_type: (company?.billing_type as "PRENDAS" | "KILOS") ?? "PRENDAS",
         service_type:
@@ -152,6 +161,61 @@ export function CompanyFormDialog({
                 </p>
               </FieldContent>
             </Field>
+            {/* Cliente 1:1 y cliente compartido piden datos distintos: en el
+                primero la empresa ES el cliente, así que se configura su faena y
+                el tipo queda decidido (mandante); en el segundo la faena ya la
+                trae el cliente y lo que falta definir es qué es esta empresa
+                dentro de él. */}
+            {watch("client_id") === null ? (
+              <Field>
+                <FieldLabel htmlFor="faena_id">Faena</FieldLabel>
+                <FieldContent>
+                  <FaenaSelect
+                    value={watch("faena_id") ?? undefined}
+                    onChange={(faenaId) => setValue("faena_id", faenaId ?? null)}
+                  />
+                  <FieldError errors={[errors.faena_id]} />
+                  <p className="text-xs text-muted-foreground">
+                    Se guarda en el cliente que se crea junto a esta empresa.
+                    Como el cliente es la empresa, entra como mandante: su
+                    etiqueta no lleva la palabra “Contratista”.
+                  </p>
+                </FieldContent>
+              </Field>
+            ) : (
+              <Field>
+                <FieldLabel htmlFor="client_role">Tipo</FieldLabel>
+                <FieldContent>
+                  <Select
+                    value={watch("client_role")}
+                    onValueChange={(value: string) =>
+                      setValue(
+                        "client_role",
+                        value as "MANDANTE" | "CONTRATISTA",
+                      )
+                    }
+                  >
+                    <SelectTrigger id="client_role">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CLIENT_ROLES.map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {CLIENT_ROLE_LABELS[value]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FieldError errors={[errors.client_role]} />
+                  <p className="text-xs text-muted-foreground">
+                    Mandante es la empresa del propio cliente; contratista
+                    trabaja para él en la misma faena. Las contratistas imprimen
+                    la palabra “Contratista” en la etiqueta lavable y en la
+                    boleta. El cobro y el catálogo son del cliente en ambos casos.
+                  </p>
+                </FieldContent>
+              </Field>
+            )}
             <Field>
               <FieldLabel htmlFor="tax_id">RUT</FieldLabel>
               <FieldContent>
@@ -230,7 +294,7 @@ export function CompanyFormDialog({
                 <FieldError errors={[errors.delivery_flow]} />
                 <p className="text-xs text-muted-foreground">
                   En Flujo 2 no se registra la entrega individual al trabajador:
-                  la OT queda en Despachada completa como estado terminal.
+                  la OT queda en Despachada como estado terminal.
                 </p>
               </FieldContent>
             </Field>

@@ -253,8 +253,29 @@ export function useFinishPacking(orderId: number) {
   });
 }
 
-// Resuelve una prenda que faltó al empacar (guía INCOMPLETA): encontrada
-// (con su código) o comprada (con su costo). Ver MissingItemResolution.
+// Despacha a faena un morral ya cerrado (paso 7). La vía normal es el tercer
+// pistoleo de la boleta en la estación de empaque; esto es el equivalente por
+// id para el panel, igual que useFinishPacking lo es del segundo disparo.
+export function useDispatchOrder(orderId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: { note: string }) => {
+      const { data, error } = await api.POST(
+        "/api/orders/{order_id}/dispatch",
+        { params: { path: { order_id: orderId } }, body },
+      );
+      if (error) throw parseApiError(error);
+      return data as LaundryOrderOut;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ordersKeys.all });
+    },
+  });
+}
+
+// Resuelve una prenda que faltó al empacar (guía INCOMPLETA o ya despachada
+// con el faltante a bordo): encontrada (con su código) o comprada (con su
+// costo). Ver MissingItemResolution.
 export function useResolveMissingItem(orderId: number) {
   const queryClient = useQueryClient();
   return useMutation({

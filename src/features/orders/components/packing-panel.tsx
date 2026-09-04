@@ -15,6 +15,7 @@ import { useAuth } from "@/lib/auth/auth-provider";
 import { canPack as roleCanPack } from "@/components/layout/nav-config";
 import { RESOLUTION_TYPE_LABELS } from "@/features/orders/lib/status";
 import {
+  useDispatchOrder,
   useFinishPacking,
   usePackingProgress,
   usePackingScan,
@@ -48,10 +49,25 @@ export function PackingPanel({
 }) {
   const { user } = useAuth();
   const canPack = roleCanPack(user?.role);
-  const isPackingStage = ["RECIBIDA", "EN_REVISION", "INCOMPLETA"].includes(
-    order.status,
+  // Prendas ya resueltas que siguen en planta esperando su envío aparte: el
+  // morral salió incompleto y la prenda apareció (o se compró) después.
+  const pendingShipment = order.missing_item_resolutions.filter(
+    (resolution) => !resolution.shipped_at,
   );
+  const isDispatched = order.status === "DESPACHADA";
+  const isPackingStage =
+    ["RECIBIDA", "EN_REVISION", "INCOMPLETA", "COMPLETADA"].includes(
+      order.status,
+    ) ||
+    // Ya despachada, pero con una prenda por enviar: el panel sigue sirviendo
+    // para despachar ese segundo envío.
+    (isDispatched && pendingShipment.length > 0);
   const isIncomplete = order.status === "INCOMPLETA";
+  // Cerrado, esperando el pistoleo que lo saca de planta. Es lo que separa
+  // "listo en el andén" de "ya viajando": el botón deja de ser cerrar y pasa
+  // a ser despachar.
+  const isClosed = order.status === "COMPLETADA" || isIncomplete;
+  const canDispatch = isClosed || (isDispatched && pendingShipment.length > 0);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [code, setCode] = useState("");
@@ -65,6 +81,7 @@ export function PackingPanel({
   const scan = usePackingScan(order.id);
   const resolve = useResolveMissingItem(order.id);
   const finish = useFinishPacking(order.id);
+  const dispatch = useDispatchOrder(order.id);
 
   if (!canPack || !isPackingStage) return null;
 
@@ -139,8 +156,9 @@ export function PackingPanel({
 
   return (
     <Card className="flex flex-col gap-5 p-5">
-      {/* Escaneo de prendas */}
-      {showScanner && (
+      {/* Escaneo de prendas. En COMPLETADA no queda nada que pistolear: el
+          morral está cerrado y completo, solo falta despacharlo. */}
+      {showScanner && order.status !== "COMPLETADA" && !isDispatched && (
       <div className="flex flex-col gap-2">
         <label htmlFor="prenda-code" className="text-sm font-semibold tracking-tight">
           {isIncomplete
@@ -244,31 +262,85 @@ export function PackingPanel({
         </div>
       )}
 
-      <Button
-        size="lg"
-        className="h-12 w-full text-lg sm:w-auto sm:self-start sm:px-8"
-        disabled={finish.isPending}
-        onClick={async () => {
-          try {
-            const result = await finish.mutateAsync({ note: "" });
-            toast[result.status === "COMPLETADA" ? "success" : "warning"](
-              result.status === "COMPLETADA"
-                ? "Morral validado: OT despachada completa."
-                : "Morral incompleto: OT marcada como despachada incompleta.",
-            );
-          } catch (error) {
-            toast.error(parseApiError(error).detail);
-          }
-        }}
-      >
-        Cerrar empaque
-      </Button>
-      <p className="text-sm text-muted-foreground">
-        Al cerrar, si falta alguna prenda la OT queda{" "}
-        <strong>Despachada incompleta</strong> con la discrepancia anotada; si
-        está completa pasa a <strong>Despachada completa</strong> y se puede
-        imprimir la boleta.
-      </p>
+      {canDispatch ? (
+        <>
+          <Button
+            size="lg"
+            className="h-12 w-full text-lg sm:w-auto sm:self-start sm:px-8"
+            disabled={dispatch.isPending}
+            onClick={async () => {
+              try {
+                await dispatch.mutateAsync({ note: "" });
+                toast[isIncomplete ? "warning" : "success"](
+                  isDispatched
+                    ? "Prenda despachada a faena en envío aparte."
+                    : isIncomplete
+                      ? "Morral despachado a faena con prendas faltantes pendientes."
+                      : "Morral despachado a faena.",
+                );
+              } catch (error) {
+                toast.error(parseApiError(error).detail);
+              }
+            }}
+          >
+            {isDispatched ? "Despachar prenda a faena" : "Despachar a faena"}
+          </Button>
+          <p className="text-sm text-muted-foreground">
+            {isDispatched ? (
+              <>
+                El morral ya viajó sin{" "}
+                {pendingShipment.length === 1
+                  ? "esta prenda"
+                  : "estas prendas"}
+                . Al despacharla sale en su propio envío, que se registra en
+                faena como una llegada aparte.
+              </>
+            ) : (
+              <>
+                El morral está cerrado y sigue en planta. Al despacharlo la OT
+                pasa a <strong>Despachada</strong> y recién ahí se puede
+                registrar su llegada a faena.
+                {isIncomplete && (
+                  <>
+                    {" "}
+                    Sale con la prenda faltante anotada; si aparece después, se
+                    resuelve pistoleándola y viaja en un segundo envío.
+                  </>
+                )}
+              </>
+            )}
+          </p>
+        </>
+      ) : (
+        <>
+          <Button
+            size="lg"
+            className="h-12 w-full text-lg sm:w-auto sm:self-start sm:px-8"
+            disabled={finish.isPending}
+            onClick={async () => {
+              try {
+                const result = await finish.mutateAsync({ note: "" });
+                toast[result.status === "COMPLETADA" ? "success" : "warning"](
+                  result.status === "COMPLETADA"
+                    ? "Morral validado: OT completa, lista para despachar."
+                    : "Morral incompleto: OT marcada como incompleta.",
+                );
+              } catch (error) {
+                toast.error(parseApiError(error).detail);
+              }
+            }}
+          >
+            Cerrar empaque
+          </Button>
+          <p className="text-sm text-muted-foreground">
+            Al cerrar, si falta alguna prenda la OT queda{" "}
+            <strong>Incompleta</strong> con la discrepancia anotada; si está
+            completa pasa a <strong>Completa</strong> y se puede imprimir la
+            boleta. En ambos casos el morral queda en planta hasta que se
+            despache.
+          </p>
+        </>
+      )}
 
       {order.missing_item_resolutions.length > 0 && (
         <ResolutionHistory resolutions={order.missing_item_resolutions} />
@@ -471,6 +543,14 @@ function ResolutionHistory({
                   : "")
               : ""}{" "}
             · {formatDateTime(resolution.resolved_at)}
+            {resolution.shipped_at ? (
+              <> · enviada a faena {formatDateTime(resolution.shipped_at)}</>
+            ) : (
+              <span className="font-medium text-amber-600 dark:text-amber-400">
+                {" "}
+                · pendiente de envío
+              </span>
+            )}
           </li>
         ))}
       </ul>

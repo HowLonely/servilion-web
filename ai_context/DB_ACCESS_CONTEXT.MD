@@ -20,7 +20,7 @@ pesadopor= persona que pesa el cargo, no es relevante seguir manteniendolo
 entregado= esta deberia ser la fecha real de entrega, en el caso de que se utilice la aplicacion de android donde pedira scanear 2 QR, deberia actualizarse ahi,m es cuando se entrega el cargo en la faena en la habitacion correspondiente.
 ticket=???
 ref= P1238 -: Es un codigo interno que se utiliza como OT pero mas pequeño
-control=???
+control=Codigo de control, se utiliza para identificación unica cuando la OT esta vacia. Idealmente se utiliza el ID autoincremental de la base de datos
 imagen=???
 
 Flujo en programa:

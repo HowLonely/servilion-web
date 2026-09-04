@@ -61,7 +61,8 @@ export function GarmentLabelsSheet({ orderId }: { orderId: number }) {
             garmentName={label.garment_name}
             workerName={label.worker_name}
             companyName={label.company_name}
-            camp={label.camp}
+            faena={label.faena}
+            isContractor={label.is_contractor}
             quantity={label.quantity}
           />
         ))}

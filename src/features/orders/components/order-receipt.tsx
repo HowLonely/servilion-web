@@ -66,9 +66,25 @@ export function OrderReceipt({ orderId }: { orderId: number }) {
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-3">
-              <p className="max-w-40 truncate text-right text-xs font-bold uppercase">
-                {receipt.company_name}
-              </p>
+              {/* Faena arriba y empresa abajo: quien recibe en faena mira esta
+                  esquina para saber de quién es el morral. "Contratista" va
+                  recuadrado porque es lo que distingue esa ropa de la del
+                  mandante, que se lava y factura bajo el mismo cliente. */}
+              <div className="min-w-0 text-right">
+                {receipt.faena && (
+                  <p className="truncate text-[9px] leading-none font-semibold tracking-[0.15em] uppercase text-neutral-500">
+                    {receipt.faena}
+                  </p>
+                )}
+                <p className="mt-1 max-w-40 truncate text-xs font-bold uppercase">
+                  {receipt.company_name}
+                </p>
+                {receipt.is_contractor && (
+                  <p className="mt-1 inline-block border border-black px-1 py-0.5 text-[8px] leading-none font-black tracking-[0.15em] uppercase">
+                    Contratista
+                  </p>
+                )}
+              </div>
               {receipt.company_logo_url && (
                 // eslint-disable-next-line @next/next/no-img-element -- logo remoto (S3) de tamaño variable, sin necesidad de optimización de Next/Image en un comprobante impreso.
                 <img

@@ -26,7 +26,7 @@ function packagingDelayNote(order: LaundryOrderOut): string | null {
     format: ["days", "hours", "minutes"],
     locale: es,
   });
-  return `Quedó despachada incompleta el ${formatDateTime(order.incomplete_at)}; se despachó completa ${
+  return `Se cerró incompleta el ${formatDateTime(order.incomplete_at)}; quedó completa ${
     readable || "menos de un minuto"
   } después.`;
 }
@@ -55,6 +55,14 @@ function milestonesOf(order: LaundryOrderOut): TimelineEntry[] {
       dot: "bg-indigo-500",
     },
   ];
+
+  entries.push({
+    key: "dispatched",
+    label: "Despachado a Faena",
+    description: "Morral cerrado, cargado y en tránsito hacia faena.",
+    at: order.dispatched_at,
+    dot: "bg-sky-500",
+  });
 
   if (order.clean_receptions.length > 0) {
     const multiple = order.clean_receptions.length > 1;

@@ -32,6 +32,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# Excepción: la plantilla sí se versiona. Sin ella no hay forma de saber que la
+# app necesita DJANGO_API_URL / NEXT_PUBLIC_API_URL, y el login falla con un 500
+# opaco (fetch a "undefined/api/auth/login").
+!.env.example
 
 # vercel
 .vercel

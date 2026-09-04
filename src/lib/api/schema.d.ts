@@ -390,6 +390,107 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/weighing/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Weigh Ins
+         * @description Pesajes recientes. `mine=true` es "los de mi turno" en la báscula.
+         */
+        get: operations["weighing_api_list_weigh_ins"];
+        put?: never;
+        /**
+         * Create Weigh In
+         * @description Pesa el morral, emite el ref y crea sus etiquetas.
+         */
+        post: operations["weighing_api_create_weigh_in"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/weighing/pending/{reference}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Find Pending Weigh In
+         * @description Resuelve el ref del ticket maestro para que la digitación lo consuma.
+         *
+         *     Sin restricción de rol: quien digitaliza necesita leerlo, y no expone nada
+         *     que la guía resultante no vaya a mostrar de todas formas.
+         */
+        get: operations["weighing_api_find_pending_weigh_in"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/weighing/{weigh_in_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Weigh In */
+        get: operations["weighing_api_get_weigh_in"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/weighing/{weigh_in_id}/print": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Print Job
+         * @description Datos para (re)imprimir los adhesivos y el ticket maestro.
+         */
+        get: operations["weighing_api_get_print_job"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/weighing/{weigh_in_id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Void Weigh In */
+        post: operations["weighing_api_void_weigh_in"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/": {
         parameters: {
             query?: never;
@@ -694,6 +795,30 @@ export interface paths {
          * @description Cierra el empaque: completa la guía o la marca incompleta según el pistoleo.
          */
         post: operations["orders_api_finish_packing"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/{order_id}/dispatch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dispatch Order
+         * @description Despacha a faena un morral ya cerrado (paso 7).
+         *
+         *     La vía normal es el tercer pistoleo de la boleta en la mesa de empaque
+         *     (`/scan/packing`); este endpoint es el equivalente por id para el panel,
+         *     igual que `/packing/finish` lo es del segundo disparo.
+         */
+        post: operations["orders_api_dispatch_order"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1124,6 +1249,10 @@ export interface components {
             name: string;
             /** Tax Id */
             tax_id: string;
+            /** Faena Id */
+            faena_id: number | null;
+            /** Faena Name */
+            faena_name: string;
             /** Reference Prefix */
             reference_prefix: string;
             /** Contact Name */
@@ -1153,6 +1282,8 @@ export interface components {
              * @default
              */
             tax_id: string;
+            /** Faena Id */
+            faena_id?: number | null;
             /**
              * Reference Prefix
              * @default
@@ -1243,10 +1374,18 @@ export interface components {
             client_id: number;
             /** Client Name */
             client_name: string;
+            /** Faena Id */
+            faena_id: number | null;
+            /** Faena Name */
+            faena_name: string;
             /** Name */
             name: string;
             /** Tax Id */
             tax_id: string;
+            /** Client Role */
+            client_role: string;
+            /** Is Contractor */
+            is_contractor: boolean;
             /** Billing Type */
             billing_type: string;
             /** Service Type */
@@ -1275,6 +1414,13 @@ export interface components {
             name: string;
             /** Client Id */
             client_id?: number | null;
+            /** Faena Id */
+            faena_id?: number | null;
+            /**
+             * Client Role
+             * @default CONTRATISTA
+             */
+            client_role: string;
             /**
              * Tax Id
              * @default
@@ -1534,6 +1680,124 @@ export interface components {
              */
             is_active: boolean;
         };
+        /** WeighInOut */
+        WeighInOut: {
+            /** Id */
+            id: number;
+            /** Reference */
+            reference: string;
+            /** Status */
+            status: string;
+            /** Status Label */
+            status_label: string;
+            /** Client Id */
+            client_id: number;
+            /** Client Name */
+            client_name: string;
+            /** Company Id */
+            company_id: number;
+            /** Company Name */
+            company_name: string;
+            /** Faena */
+            faena: string;
+            /** Is Contractor */
+            is_contractor: boolean;
+            /** Garment Count */
+            garment_count: number;
+            /** Weight Kg */
+            weight_kg: number;
+            /**
+             * Weighed At
+             * Format: date-time
+             */
+            weighed_at: string;
+            /** Weighed By Name */
+            weighed_by_name: string;
+            /** Order Id */
+            order_id: number | null;
+            /** Order Number */
+            order_number: string;
+            /** Digitized At */
+            digitized_at: string | null;
+            /** Voided At */
+            voided_at: string | null;
+            /** Void Reason */
+            void_reason: string;
+            /** Labels */
+            labels: components["schemas"]["WeighLabelOut"][];
+        };
+        /**
+         * WeighLabelOut
+         * @description Un adhesivo. `code` es a la vez lo impreso y lo que lee la pistola.
+         */
+        WeighLabelOut: {
+            /** Sequence */
+            sequence: number;
+            /** Code */
+            code: string;
+            /** Scanned At */
+            scanned_at: string | null;
+        };
+        /**
+         * WeighInIn
+         * @description Lo que la báscula manda: los cuatro datos que el operador toca en pantalla.
+         *
+         *     No lleva `reference` ni fecha: el ref lo emite el servidor (es un correlativo
+         *     que debe serializarse entre estaciones) y el momento del pesaje es el de la
+         *     petición, no uno que el operador pueda elegir.
+         */
+        WeighInIn: {
+            /** Client Id */
+            client_id: number;
+            /** Company Id */
+            company_id: number;
+            /** Garment Count */
+            garment_count: number;
+            /** Weight Kg */
+            weight_kg: number;
+        };
+        /**
+         * PrintJobOut
+         * @description Datos para imprimir, sin layout: el cliente arma el ZPL.
+         *
+         *     Misma convención que `orders.services.build_receipt` y `build_garment_labels`:
+         *     el backend no sabe de milímetros ni de modelos de impresora. Aquí la que
+         *     imprime es la terminal de escritorio, que además es la única que conoce el
+         *     puerto donde está colgada la etiquetera.
+         */
+        PrintJobOut: {
+            /** Reference */
+            reference: string;
+            /** Client Name */
+            client_name: string;
+            /** Company Name */
+            company_name: string;
+            /** Faena */
+            faena: string;
+            /** Is Contractor */
+            is_contractor: boolean;
+            /** Garment Count */
+            garment_count: number;
+            /** Weight Kg */
+            weight_kg: number;
+            /**
+             * Weighed At
+             * Format: date-time
+             */
+            weighed_at: string;
+            /** Weighed By Name */
+            weighed_by_name: string;
+            /** Labels */
+            labels: components["schemas"]["WeighLabelOut"][];
+        };
+        /** VoidWeighInIn */
+        VoidWeighInIn: {
+            /**
+             * Reason
+             * @default
+             */
+            reason: string;
+        };
         /**
          * CleanReceptionOut
          * @description Una llegada física del morral limpio a faena (repetible: ver `SiteScan`).
@@ -1604,6 +1868,8 @@ export interface components {
             incomplete_at: string | null;
             /** Completed At */
             completed_at: string | null;
+            /** Dispatched At */
+            dispatched_at: string | null;
             /** Clean Receptions */
             clean_receptions: components["schemas"]["CleanReceptionOut"][];
             /** Delivered At */
@@ -1626,6 +1892,10 @@ export interface components {
             items: components["schemas"]["OrderItemOut"][];
             /** Missing Item Resolutions */
             missing_item_resolutions: components["schemas"]["MissingItemResolutionOut"][];
+            /** Weigh In Id */
+            weigh_in_id: number | null;
+            /** Weighed Garment Count */
+            weighed_garment_count: number | null;
             /**
              * Updated At
              * Format: date-time
@@ -1635,7 +1905,7 @@ export interface components {
         /** MissingItemResolutionOut */
         MissingItemResolutionOut: {
             /** Item Id */
-            item_id: number;
+            item_id: number | null;
             /** Item Code */
             item_code: string;
             /** Item Name */
@@ -1653,6 +1923,8 @@ export interface components {
             resolved_at: string;
             /** Resolved By Name */
             resolved_by_name: string | null;
+            /** Shipped At */
+            shipped_at: string | null;
             /** Note */
             note: string;
         };
@@ -1682,6 +1954,8 @@ export interface components {
             order_number: string;
             /** Worker Id */
             worker_id: number;
+            /** Weigh In Id */
+            weigh_in_id?: number | null;
             /**
              * Ticket Number
              * @default
@@ -1808,16 +2082,38 @@ export interface components {
             is_complete: boolean;
             /** Items */
             items: components["schemas"]["PackingItemProgressOut"][];
+            /**
+             * Mode
+             * @default tipo
+             */
+            mode: string;
+            /**
+             * Units
+             * @default []
+             */
+            units: components["schemas"]["PackingUnitProgressOut"][];
         };
         /**
          * PackingScanOut
-         * @description Qué hizo el pistoleo: abrió el morral, lo cerró o marcó una prenda.
+         * @description Qué hizo el pistoleo: abrió el morral, lo cerró, lo despachó o marcó una prenda.
          */
         PackingScanOut: {
             /** Action */
             action: string;
             order: components["schemas"]["LaundryOrderOut"];
             progress: components["schemas"]["PackingProgressOut"];
+        };
+        /**
+         * PackingUnitProgressOut
+         * @description Una prenda física del morral, identificada por su adhesivo (`P1375A-03`).
+         */
+        PackingUnitProgressOut: {
+            /** Sequence */
+            sequence: number;
+            /** Code */
+            code: string;
+            /** Is Scanned */
+            is_scanned: boolean;
         };
         /**
          * AmbiguousOrderOut
@@ -2067,6 +2363,10 @@ export interface components {
             company_name: string;
             /** Company Logo Url */
             company_logo_url: string | null;
+            /** Faena */
+            faena: string;
+            /** Is Contractor */
+            is_contractor: boolean;
             /** Worker Name */
             worker_name: string;
             /** Phone */
@@ -2111,6 +2411,10 @@ export interface components {
             worker_name: string;
             /** Company Name */
             company_name: string;
+            /** Faena */
+            faena: string;
+            /** Is Contractor */
+            is_contractor: boolean;
             /** Camp */
             camp: string;
             /** Quantity */
@@ -3686,6 +3990,174 @@ export interface operations {
             };
         };
     };
+    weighing_api_list_weigh_ins: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                mine?: boolean;
+                since?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeighInOut"][];
+                };
+            };
+        };
+    };
+    weighing_api_create_weigh_in: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WeighInIn"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeighInOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+        };
+    };
+    weighing_api_find_pending_weigh_in: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reference: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeighInOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+        };
+    };
+    weighing_api_get_weigh_in: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                weigh_in_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeighInOut"];
+                };
+            };
+        };
+    };
+    weighing_api_get_print_job: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                weigh_in_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrintJobOut"];
+                };
+            };
+        };
+    };
+    weighing_api_void_weigh_in: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                weigh_in_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoidWeighInIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeighInOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+        };
+    };
     orders_api_list_orders: {
         parameters: {
             query?: {
@@ -4124,6 +4596,41 @@ export interface operations {
         };
     };
     orders_api_finish_packing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoteIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LaundryOrderOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+        };
+    };
+    orders_api_dispatch_order: {
         parameters: {
             query?: never;
             header?: never;
