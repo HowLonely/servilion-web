@@ -1896,6 +1896,8 @@ export interface components {
             weigh_in_id: number | null;
             /** Weighed Garment Count */
             weighed_garment_count: number | null;
+            /** Weighed At */
+            weighed_at: string | null;
             /**
              * Updated At
              * Format: date-time
@@ -1982,11 +1984,6 @@ export interface components {
              * @default
              */
             observations: string;
-            /**
-             * Reference
-             * @default
-             */
-            reference: string;
             /**
              * Control Code
              * @default
@@ -2298,11 +2295,6 @@ export interface components {
              * @default
              */
             observations: string;
-            /**
-             * Reference
-             * @default
-             */
-            reference: string;
             /**
              * Control Code
              * @default

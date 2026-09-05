@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -43,11 +43,13 @@ export function CampFormDialog({
   const createCamp = useCreateCamp();
   const updateCamp = useUpdateCamp(camp?.id ?? -1);
 
-  useEffect(() => {
-    if (!open) return;
-    setFaenaId(camp?.faena_id);
-    setCampName(camp?.name ?? "");
-  }, [open, camp]);
+  function handleOpenChange(nextOpen: boolean) {
+    if (nextOpen) {
+      setFaenaId(camp?.faena_id);
+      setCampName(camp?.name ?? "");
+    }
+    setOpen(nextOpen);
+  }
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -78,7 +80,7 @@ export function CampFormDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>

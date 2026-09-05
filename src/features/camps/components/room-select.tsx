@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   Select,
@@ -58,16 +58,12 @@ export function RoomSelect({
     { is_active: true, limit: ROOMS_SELECT_LIMIT },
     campId === null && value != null,
   );
-
-  useEffect(() => {
-    if (campId !== null || value == null) return;
-    const encontrada = roomActual?.items.find((h) => h.id === value);
-    if (encontrada) setCampId(encontrada.camp_id);
-  }, [roomActual, value, campId]);
+  const selectedRoom = roomActual?.items.find((room) => room.id === value);
+  const effectiveCampId = campId ?? selectedRoom?.camp_id ?? null;
 
   const { data: roomsPage } = useRooms(
-    { camp_id: campId ?? undefined, is_active: true, limit: ROOMS_SELECT_LIMIT },
-    campId !== null,
+    { camp_id: effectiveCampId ?? undefined, is_active: true, limit: ROOMS_SELECT_LIMIT },
+    effectiveCampId !== null,
   );
   const rooms = roomsPage?.items ?? [];
 
@@ -75,7 +71,7 @@ export function RoomSelect({
     <div className={cn("grid gap-2 sm:grid-cols-2", className)}>
       <Select
         disabled={disabled}
-        value={campId ? String(campId) : NONE_VALUE}
+        value={effectiveCampId ? String(effectiveCampId) : NONE_VALUE}
         onValueChange={(next: string) => {
           const id = next === NONE_VALUE ? null : Number(next);
           setCampId(id);
@@ -98,13 +94,13 @@ export function RoomSelect({
       </Select>
 
       <Select
-        disabled={disabled || campId === null}
+        disabled={disabled || effectiveCampId === null}
         value={value ? String(value) : NONE_VALUE}
         onValueChange={(next: string) => onChange(next === NONE_VALUE ? null : Number(next))}
       >
         <SelectTrigger className="w-full">
           <SelectValue
-            placeholder={campId === null ? "Elige camp" : "Habitación"}
+            placeholder={effectiveCampId === null ? "Elige camp" : "Habitación"}
           />
         </SelectTrigger>
         <SelectContent>

@@ -14,6 +14,13 @@ type TimelineEntry = {
   description: string;
   at: string | null | undefined;
   dot: string;
+  /**
+   * Texto para cuando el hito no tiene fecha porque NUNCA va a tenerla, no
+   * porque esté por ocurrir. Un morral digitalizado sin báscula no tiene el
+   * pesaje "pendiente": no pasó por ahí y no va a pasar. Sin esta distinción la
+   * línea de tiempo promete un paso que no va a llegar.
+   */
+  notApplicable?: string;
 };
 
 function packagingDelayNote(order: LaundryOrderOut): string | null {
@@ -38,7 +45,38 @@ function packagingDelayNote(order: LaundryOrderOut): string | null {
 // aparte, cada llegada física queda en su propia fila.
 function milestonesOf(order: LaundryOrderOut): TimelineEntry[] {
   const isFlow2 = order.delivery_flow === "FLUJO_2";
+  // Se retiró el hito "Recepcionado en Faena (Ropa Sucia)" (paso 2 del flujo,
+  // `order.site_received_at`): ningún cliente llama a
+  // `POST /orders/scan/site-reception` que lo llenaría, y hoy no existe un
+  // código físico sobre el morral o la OT en blanco para pistolear en ese
+  // momento (el adhesivo que documenta FLUJO_NEGOCIO.md §3.2 es una hipótesis
+  // sin confirmar, heredada de la app PEÑON del sistema anterior). Mostrarlo
+  // como "Pendiente" para siempre —nunca se llena, nunca se va a llenar con
+  // las pantallas actuales— era prometer un paso que no existe en la
+  // operación real. El campo y el endpoint siguen en el backend por si algún
+  // día hay un QR real que pistolear ahí; el día que lo haya, este hito vuelve.
   const entries: TimelineEntry[] = [
+    {
+      // Paso 4a: el primer momento en que el sistema ve este morral. Ocurre
+      // antes de que la guía exista —por eso el dato viene del pesaje y no de
+      // un campo propio de la guía— y es lo que explica que el empaque valide
+      // por unidad en vez de por tipo de prenda.
+      key: "weighed",
+      label: "Pesado en Báscula",
+      description:
+        order.weighed_garment_count !== null
+          ? `Morral pesado y etiquetado: ${order.weighed_garment_count} prendas contadas en báscula.`
+          : "Morral pesado y etiquetado al llegar a planta.",
+      at: order.weighed_at,
+      dot: "bg-violet-500",
+      // El pesaje solo se enlaza al digitalizar (`consume` corre dentro de
+      // `create_order`), así que una guía sin `weigh_in_id` no lo va a tener
+      // nunca: no está pendiente, no aplica.
+      notApplicable:
+        order.weigh_in_id === null
+          ? "Se digitalizó sin pasar por la báscula, así que el empaque valida por tipo de prenda y no por unidad."
+          : undefined,
+    },
     {
       key: "laundry",
       label: "Recepcionado en Lavandería",
@@ -108,6 +146,9 @@ export function OrderTimeline({ order }: { order: LaundryOrderOut }) {
     <ol className="flex flex-col">
       {milestones.map((milestone, index) => {
         const reached = Boolean(milestone.at);
+        // Tres estados y no dos: cumplido, pendiente (todavía puede pasar) y
+        // no aplica (no va a pasar nunca). Ver `TimelineEntry.notApplicable`.
+        const skipped = !reached && Boolean(milestone.notApplicable);
         const isLast = index === milestones.length - 1;
 
         return (
@@ -118,7 +159,11 @@ export function OrderTimeline({ order }: { order: LaundryOrderOut }) {
                   "z-10 mt-0.5 size-3 shrink-0 rounded-full",
                   reached
                     ? cn(milestone.dot, "shadow-[0_0_0_3px_var(--color-card)]")
-                    : "border-2 border-muted-foreground/25 bg-card",
+                    : skipped
+                      // Punteado: se distingue del círculo vacío de "pendiente"
+                      // sin necesidad de leer el texto.
+                      ? "border-2 border-dashed border-muted-foreground/40 bg-card"
+                      : "border-2 border-muted-foreground/25 bg-card",
                 )}
               />
               {!isLast && (
@@ -132,18 +177,23 @@ export function OrderTimeline({ order }: { order: LaundryOrderOut }) {
             </div>
             <div className={cn("flex flex-col gap-0.5", !isLast && "pb-6")}>
               <span className="text-xs font-medium text-muted-foreground">
-                {reached ? formatDateTime(milestone.at) : "Pendiente"}
+                {reached
+                  ? formatDateTime(milestone.at)
+                  : skipped
+                    ? "No aplica"
+                    : "Pendiente"}
               </span>
               <span
                 className={cn(
                   "text-sm font-semibold tracking-tight",
                   !reached && "text-muted-foreground",
+                  skipped && "line-through decoration-muted-foreground/40",
                 )}
               >
                 {milestone.label}
               </span>
               <span className="text-xs text-muted-foreground">
-                {milestone.description}
+                {skipped ? milestone.notApplicable : milestone.description}
               </span>
             </div>
           </li>

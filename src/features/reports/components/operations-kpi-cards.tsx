@@ -2,7 +2,6 @@ import {
   AlarmClock,
   ArrowDownToLine,
   Boxes,
-  Clock,
   Factory,
   Gauge,
   Hourglass,

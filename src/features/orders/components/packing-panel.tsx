@@ -55,14 +55,22 @@ export function PackingPanel({
     (resolution) => !resolution.shipped_at,
   );
   const isDispatched = order.status === "DESPACHADA";
+  const isIncomplete = order.status === "INCOMPLETA";
+  // El morral salió con un faltante que sigue sin saldarse. `packed_at` solo se
+  // escribe cuando el morral queda completo —al cerrarlo o al resolver la
+  // última prenda—, así que es el corte que usa el backend
+  // (`_is_resolving_missing`) y no depende del estado.
+  const hasOpenMissing = Boolean(order.incomplete_at) && !order.packed_at;
+  // Un pistoleo de prenda todavía resuelve un faltante: siempre en INCOMPLETA,
+  // y en DESPACHADA si el morral viajó sin ella.
+  const isResolving = isIncomplete || (isDispatched && hasOpenMissing);
   const isPackingStage =
     ["RECIBIDA", "EN_REVISION", "INCOMPLETA", "COMPLETADA"].includes(
       order.status,
     ) ||
-    // Ya despachada, pero con una prenda por enviar: el panel sigue sirviendo
-    // para despachar ese segundo envío.
-    (isDispatched && pendingShipment.length > 0);
-  const isIncomplete = order.status === "INCOMPLETA";
+    // Ya despachada, pero con una prenda por encontrar o por enviar: el panel
+    // sigue sirviendo para resolverla y para despachar ese segundo envío.
+    (isDispatched && (hasOpenMissing || pendingShipment.length > 0));
   // Cerrado, esperando el pistoleo que lo saca de planta. Es lo que separa
   // "listo en el andén" de "ya viajando": el botón deja de ser cerrar y pasa
   // a ser despachar.
@@ -89,9 +97,10 @@ export function PackingPanel({
     const value = code.trim();
     if (!value || !progress) return;
 
-    if (isIncomplete) {
-      // La guía ya se cerró incompleta: pistolear aquí es encontrar la prenda
-      // que faltaba, no un pistoleo normal de empaque.
+    if (isResolving) {
+      // El morral ya se cerró con un faltante (esté todavía en planta o ya
+      // despachado): pistolear aquí es encontrar la prenda que faltaba, no un
+      // pistoleo normal de empaque.
       const item = progress.items.find(
         (it) => it.code.toUpperCase() === value.toUpperCase(),
       );
@@ -158,10 +167,12 @@ export function PackingPanel({
     <Card className="flex flex-col gap-5 p-5">
       {/* Escaneo de prendas. En COMPLETADA no queda nada que pistolear: el
           morral está cerrado y completo, solo falta despacharlo. */}
-      {showScanner && order.status !== "COMPLETADA" && !isDispatched && (
+      {showScanner &&
+        order.status !== "COMPLETADA" &&
+        (!isDispatched || isResolving) && (
       <div className="flex flex-col gap-2">
         <label htmlFor="prenda-code" className="text-sm font-semibold tracking-tight">
-          {isIncomplete
+          {isResolving
             ? "Pistolea la prenda que reapareció"
             : "Pistolea cada prenda del morral"}
         </label>
@@ -212,7 +223,7 @@ export function PackingPanel({
           </div>
         )}
 
-        {isIncomplete && (
+        {isResolving && (
           <p className="text-sm text-muted-foreground">
             Si la prenda no aparece, márcala como <strong>comprada</strong> en su
             fila más abajo.
@@ -254,7 +265,7 @@ export function PackingPanel({
                 key={`${item.item_id}-${item.scanned_quantity}`}
                 item={item}
                 bordered={index > 0}
-                showPurchaseAction={isIncomplete}
+                showPurchaseAction={isResolving}
                 orderId={order.id}
               />
             ))}

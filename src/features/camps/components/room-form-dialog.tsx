@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -48,11 +48,13 @@ export function RoomFormDialog({
   const createRoom = useCreateRoom();
   const updateRoom = useUpdateRoom(room?.id ?? -1);
 
-  useEffect(() => {
-    if (!open) return;
-    setCampId(room?.camp_id ?? defaultCampId);
-    setRoomNumber(room?.number ?? "");
-  }, [open, room, defaultCampId]);
+  function handleOpenChange(nextOpen: boolean) {
+    if (nextOpen) {
+      setCampId(room?.camp_id ?? defaultCampId);
+      setRoomNumber(room?.number ?? "");
+    }
+    setOpen(nextOpen);
+  }
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -87,7 +89,7 @@ export function RoomFormDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>

@@ -68,7 +68,6 @@ export function CreateOrderForm() {
       weight_kg: null,
       received_at: `${dateInputDaysAgo(0)}T${new Date().toTimeString().slice(0, 5)}`,
       observations: "",
-      reference: "",
       control_code: "",
       items: [],
     },

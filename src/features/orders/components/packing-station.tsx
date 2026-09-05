@@ -170,8 +170,12 @@ export function PackingStation() {
       }
     } catch (error) {
       if (isAmbiguousReference(error)) {
-        // El ref se resetea cada semana: hay más de un morral abierto con este
-        // código y solo el operador, que los tiene al frente, sabe cuál es.
+        // El código calza con más de una guía viva y solo el operador, que las
+        // tiene al frente, sabe cuál es. No es el ref repitiéndose: desde el
+        // ciclo (`ReferenceCounter`) el ref corre de 1000 a 1999 y al dar la
+        // vuelta avanza la letra. Lo que sí puede cruzarse es un código con
+        // otra capa —una OT que coincide con el ref o el control de otra guía—
+        // o un morral viejo que quedó Incompleto y nunca se cerró.
         setAmbiguity({
           reference: error.reference,
           candidates: error.candidates,
@@ -370,7 +374,7 @@ function AmbiguityPicker({
         <span className="font-mono">{ambiguity.reference}</span>
       </div>
       <p className="text-sm text-muted-foreground">
-        El ref se reinicia cada semana. Elige el morral que tienes al frente.
+        Elige el morral que tienes al frente: el código calza con más de uno.
       </p>
       <div className="overflow-hidden rounded-xl border">
         {ambiguity.candidates.map((candidate, index) => (

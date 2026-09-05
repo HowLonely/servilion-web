@@ -15,15 +15,23 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+// Los cinco roles del backend (`authentication/models.py::User.Role`), no solo
+// los que tienen pantalla acá. PESAJE es el caso raro: su estación es física
+// —una balanza, una pantalla táctil y una etiquetera— y vive solo en
+// `servilion-desktop`, así que no aparece en ningún ítem de navegación. Aun así
+// tiene que estar en este tipo: sin él la app no sabía nombrar su propio rol y
+// lo dejaba entrar a un Panel vacío que solo respondía 403.
 export type StaffRole =
   | "ADMIN"
   | "SUPERVISOR"
+  | "PESAJE"
   | "DIGITADOR_OT"
   | "DIGITADOR_EMPAQUE";
 
 export const ROLE_LABELS: Record<string, string> = {
   ADMIN: "Administrador",
   SUPERVISOR: "Supervisor",
+  PESAJE: "Pesaje",
   DIGITADOR_OT: "Digitador de OT",
   DIGITADOR_EMPAQUE: "Digitador de Empaque",
 };
@@ -46,6 +54,7 @@ export const ROLE_LABELS: Record<string, string> = {
 //   POST /api/orders/                        → DIGITADOR_OT, SUPERVISOR
 //   POST /api/orders/{id}/packing/scan       → DIGITADOR_EMPAQUE, SUPERVISOR
 //   POST /api/orders/{id}/packing/finish     → DIGITADOR_EMPAQUE, SUPERVISOR
+//   POST /api/orders/{id}/dispatch           → DIGITADOR_EMPAQUE, SUPERVISOR
 //   POST /api/orders/{id}/incomplete/resolve → DIGITADOR_EMPAQUE, SUPERVISOR
 //   POST /api/orders/{id}/clean-reception    → SUPERVISOR
 //   POST /api/orders/{id}/deliver            → SUPERVISOR
@@ -246,11 +255,26 @@ export function findActiveNavItem(pathname: string): NavItem | undefined {
 }
 
 /**
+ * ¿Este rol tiene alguna pantalla en el panel web?
+ *
+ * Hoy solo `PESAJE` responde que no: su puesto es la báscula de Antofagasta y
+ * se opera en la terminal de escritorio. Se pregunta a la navegación en vez de
+ * comparar contra una lista de roles para que agregar un ítem visible para él
+ * baste para que la respuesta cambie sola.
+ */
+export function hasWorkspace(role: string | undefined): boolean {
+  return NAV_ITEMS.some((item) => isNavItemVisible(item, role));
+}
+
+/**
  * Primera pantalla a la que mandar al usuario tras iniciar sesión.
  *
  * Los digitadores no ven el Panel, así que enviarlos a "/" los dejaría en una
  * página vacía: se les manda directo a su estación. Se resuelve desde la propia
  * navegación para que un cambio de permisos arrastre también el destino.
+ *
+ * Para un rol sin pantallas devuelve "/", que es donde `DashboardHomeGuard`
+ * explica que su puesto está en la terminal de escritorio.
  */
 export function landingPathForRole(role: string | undefined): string {
   const firstVisible = NAV_ITEMS.find((item) => isNavItemVisible(item, role));

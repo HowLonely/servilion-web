@@ -26,7 +26,9 @@ export const orderSchema = z.object({
   weight_kg: z.number().nullable(),
   received_at: z.string().min(1, "La fecha de recepción es obligatoria."),
   observations: z.string(),
-  reference: z.string(),
+  // `reference` no está: el ref lo emite el servidor (lo hereda del pesaje, o
+  // lo saca de su contador bloqueado). Mandarlo desde acá era la vía por la que
+  // un cliente podía proponer un ref duplicado; el backend ya no lo acepta.
   control_code: z.string(),
   items: z.array(orderItemSchema).min(1, "Agrega al menos una prenda."),
 });
