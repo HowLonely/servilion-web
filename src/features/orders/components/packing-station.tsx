@@ -28,13 +28,12 @@ import { ORDER_STATUS_LABELS, type OrderStatus } from "@/features/orders/lib/sta
 import type { components } from "@/lib/api/schema";
 
 type PackingScanOut = components["schemas"]["PackingScanOut"];
-type LaundryOrderOut = components["schemas"]["LaundryOrderOut"];
 type AmbiguousOrderOut = components["schemas"]["AmbiguousOrderOut"];
 
 // Estaciones del empaque: el morral solo se puede validar mientras está en
 // planta (post-digitalización y antes de despacharse). Coincide con las etapas
 // en que `PackingPanel` habilita el pistoleo. COMPLETADA entra porque el
-// morral cerrado sigue en planta esperando su pistoleo de despacho.
+// morral cerrado sigue en planta esperando su despacho (módulo aparte).
 // DESPACHADA entra porque la guía puede volver a la mesa por una prenda que
 // apareció después: el panel filtra ahí si de verdad queda algo por enviar.
 const PACKING_STAGES = [
@@ -54,22 +53,6 @@ type Ambiguity = {
   // hay que terminar de aplicarlo, no solo abrir el morral.
   pendingLabel: string;
 };
-
-/**
- * ¿El despacho que acaba de ocurrir fue el del morral, o el envío aparte de
- * una prenda que apareció después? Se deduce del sello de envío: el despacho
- * del morral marca TODAS las resoluciones que existían hasta ese momento, así
- * que si alguna quedó sellada después de `dispatched_at`, viajó sola.
- */
-function isFirstDispatch(order: LaundryOrderOut): boolean {
-  if (!order.dispatched_at) return true;
-  const dispatchedAt = new Date(order.dispatched_at).getTime();
-  return !order.missing_item_resolutions.some(
-    (resolution) =>
-      resolution.shipped_at &&
-      new Date(resolution.shipped_at).getTime() > dispatchedAt,
-  );
-}
 
 /** Segmento de prenda de una etiqueta lavable (`P1005-ALM` → `ALM`). */
 function labelSegment(code: string): string {
@@ -95,18 +78,6 @@ function describeScan(result: PackingScanOut): Feedback {
       ? { ok: true, text: `Prenda encontrada · morral completo ✓ · ${counter}` }
       : { ok: true, text: `Prenda encontrada · ${counter}` };
   }
-  if (action === "DESPACHADA") {
-    // Si la guía ya estaba despachada, esto es el envío aparte de la prenda
-    // que apareció después, no el del morral.
-    if (order.dispatched_at && !isFirstDispatch(order)) {
-      return { ok: true, text: `Prenda despachada a faena ✓ · ${counter}` };
-    }
-    // El morral pudo salir con un faltante a bordo: se dice, porque es lo que
-    // el operador tiene que anotar en la guía de transporte.
-    return progress.is_complete
-      ? { ok: true, text: `Morral despachado a faena ✓ · ${counter}` }
-      : { ok: false, text: `Morral despachado INCOMPLETO · ${counter}` };
-  }
   return progress.is_complete
     ? { ok: true, text: `Morral completo ✓ · ${counter}` }
     : { ok: true, text: `Prenda pistoleada · ${counter}` };
@@ -118,10 +89,12 @@ function describeScan(result: PackingScanOut): Feedback {
  *
  * Hay un solo input para los dos códigos que hay sobre la mesa, porque el
  * backend deduce la acción y el operador no tiene que elegir modo:
- * - la boleta del morral lo abre, el segundo disparo lo cierra y el tercero lo
- *   despacha;
+ * - la boleta del morral lo abre y, pistoleada de nuevo, lo cierra;
  * - la etiqueta lavable de una prenda abre el morral (si hacía falta) y marca
  *   la prenda en el mismo disparo.
+ *
+ * El despacho (paso 7) es un módulo aparte: pistolear acá la boleta de un
+ * morral ya cerrado ya no hace nada más que avisarlo.
  */
 export function PackingStation() {
   const { user } = useAuth();
@@ -152,20 +125,8 @@ export function PackingStation() {
       if (result.action === "CERRADO") {
         toast[result.order.status === "COMPLETADA" ? "success" : "warning"](
           result.order.status === "COMPLETADA"
-            ? "Morral validado: OT completa. Vuelve a pistolear la boleta para despacharla."
-            : "Morral incompleto: OT marcada como incompleta.",
-        );
-      }
-      if (result.action === "DESPACHADA") {
-        const secondShipment = !isFirstDispatch(result.order);
-        toast[
-          secondShipment || result.progress.is_complete ? "success" : "warning"
-        ](
-          secondShipment
-            ? "Prenda despachada a faena en envío aparte."
-            : result.progress.is_complete
-              ? "Morral despachado a faena."
-              : "Morral despachado a faena con prendas faltantes pendientes.",
+            ? "Morral validado: OT completa. Despáchala desde el módulo Despacho."
+            : "Morral incompleto: OT marcada como incompleta. Despáchala desde el módulo Despacho.",
         );
       }
     } catch (error) {
@@ -265,8 +226,9 @@ export function PackingStation() {
         )}
 
         <p className="mt-2 text-sm text-muted-foreground">
-          La boleta abre el morral y, pistoleada de nuevo, lo cierra. La etiqueta
-          de una prenda lo abre y marca la prenda en un solo disparo.
+          La boleta abre el morral y, pistoleada de nuevo, lo cierra. La
+          etiqueta de una prenda lo abre y marca la prenda en un solo disparo.
+          El despacho se hace aparte, en el módulo Despacho.
         </p>
       </Card>
 

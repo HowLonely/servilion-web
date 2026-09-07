@@ -6,9 +6,9 @@
 //
 // INCOMPLETA y COMPLETA son las dos salidas del CIERRE del morral, no del
 // despacho: dicen con qué quedó el morral, no dónde está. DESPACHADA es el
-// paso siguiente y tiene su propio pistoleo —el tercer disparo de la boleta—,
-// que es lo que permitió separarlos; antes ambos ejes vivían en COMPLETADA y
-// por eso el estado se leía como "despachada completa".
+// paso siguiente y tiene su propio pistoleo, en el módulo Despacho — antes
+// ambos ejes vivían en COMPLETADA y por eso el estado se leía como
+// "despachada completa".
 //
 // El cobro no es un estado: se retiró del flujo (era un acto administrativo
 // sin ningún escaneo detrás), así que ENTREGADA (Flujo 1) y DESPACHADA
@@ -112,6 +112,17 @@ export const RESOLUTION_TYPE_LABELS: Record<string, string> = {
   ENCONTRADA: "Encontrada",
   COMPRADA: "Comprada",
 };
+
+// Estados desde los que el módulo Despacho puede sacar el morral: cerrado y
+// sin despachar todavía (Incompleta/Completa), o ya Despachada con una prenda
+// resuelta pendiente de su envío aparte. Espejo de `DISPATCHABLE_STATUSES` en
+// orders/services.py — el backend vuelve a validar esto igual, esta lista es
+// solo para no dejar pistolear algo que el servidor va a rechazar de todos modos.
+export const DISPATCHABLE_ORDER_STATUSES: OrderStatus[] = [
+  "INCOMPLETA",
+  "COMPLETADA",
+  "DESPACHADA",
+];
 
 export function isOrderStatus(value: string): value is OrderStatus {
   return (ORDER_STATUSES as readonly string[]).includes(value);

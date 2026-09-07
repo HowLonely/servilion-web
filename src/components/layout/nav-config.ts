@@ -11,6 +11,7 @@ import {
   Shirt,
   Tent,
   TriangleAlert,
+  Truck,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -70,6 +71,15 @@ export const PACKING_ROLES: StaffRole[] = [
   "DIGITADOR_EMPAQUE",
 ];
 
+// Mismos roles que empaque: el backend exige lo mismo para /dispatch que para
+// /scan/packing, aunque viven en pantallas distintas del panel.
+/** Pistolear la boleta de un morral cerrado para sacarlo de planta. */
+export const DISPATCH_ROLES: StaffRole[] = [
+  "ADMIN",
+  "SUPERVISOR",
+  "DIGITADOR_EMPAQUE",
+];
+
 /** Hitos físicos en faena: recepción del morral limpio y entrega en habitación. */
 export const FIELD_FLOW_ROLES: StaffRole[] = ["ADMIN", "SUPERVISOR"];
 
@@ -88,6 +98,9 @@ export const canDigitize = (role: string | undefined): boolean =>
 
 export const canPack = (role: string | undefined): boolean =>
   hasRole(role, PACKING_ROLES);
+
+export const canDispatch = (role: string | undefined): boolean =>
+  hasRole(role, DISPATCH_ROLES);
 
 export const canRunFieldFlow = (role: string | undefined): boolean =>
   hasRole(role, FIELD_FLOW_ROLES);
@@ -144,6 +157,13 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: PackageCheck,
         description: "Pistolear cada prenda del morral limpio y validar completitud",
         roles: PACKING_ROLES,
+      },
+      {
+        href: "/dispatch",
+        label: "Despacho",
+        icon: Truck,
+        description: "Pistolear la boleta de un morral cerrado para sacarlo de planta",
+        roles: DISPATCH_ROLES,
       },
     ],
   },
