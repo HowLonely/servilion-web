@@ -156,7 +156,8 @@ export function useGarmentLabels(orderId: number) {
  *
  * La boleta abre el morral y lo cierra; la etiqueta lavable de una prenda abre
  * el morral (si hacía falta) y marca la prenda en el mismo disparo. El backend
- * decide la acción, así que aquí no hay modos ni estado que sincronizar.
+ * decide la acción, así que aquí no hay modos ni estado que sincronizar. El
+ * despacho (paso 7) es un módulo aparte, ver `useDispatchScan`.
  */
 export function usePackingCodeScan() {
   const queryClient = useQueryClient();
@@ -253,9 +254,9 @@ export function useFinishPacking(orderId: number) {
   });
 }
 
-// Despacha a faena un morral ya cerrado (paso 7). La vía normal es el tercer
-// pistoleo de la boleta en la estación de empaque; esto es el equivalente por
-// id para el panel, igual que useFinishPacking lo es del segundo disparo.
+// Despacha a faena un morral ya cerrado (paso 7), por id. La usa el módulo
+// Despacho para resolver un empate de ref (ver DispatchAmbiguityPicker),
+// igual que useFinishPacking es el equivalente por id del segundo disparo.
 export function useDispatchOrder(orderId: number) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -269,6 +270,28 @@ export function useDispatchOrder(orderId: number) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ordersKeys.all });
+    },
+  });
+}
+
+/**
+ * Pistoleo único del módulo Despacho (paso 7): resuelve la boleta y despacha
+ * directo, en un solo disparo. Espejo de `usePackingCodeScan`, pero sin ciclo
+ * de abrir/cerrar. El 409 (`isAmbiguousReference`) se maneja igual.
+ */
+export function useDispatchScan() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: { code: string; note: string }) => {
+      const { data, error } = await api.POST("/api/orders/scan/dispatch", {
+        body,
+      });
+      if (error) throw parseApiError(error);
+      return data as LaundryOrderOut;
+    },
+    onSuccess: (order) => {
+      queryClient.invalidateQueries({ queryKey: ordersKeys.detail(order.id) });
+      queryClient.invalidateQueries({ queryKey: ["orders", "list"] });
     },
   });
 }

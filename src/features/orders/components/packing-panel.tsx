@@ -15,7 +15,6 @@ import { useAuth } from "@/lib/auth/auth-provider";
 import { canPack as roleCanPack } from "@/components/layout/nav-config";
 import { RESOLUTION_TYPE_LABELS } from "@/features/orders/lib/status";
 import {
-  useDispatchOrder,
   useFinishPacking,
   usePackingProgress,
   usePackingScan,
@@ -71,11 +70,10 @@ export function PackingPanel({
     // Ya despachada, pero con una prenda por encontrar o por enviar: el panel
     // sigue sirviendo para resolverla y para despachar ese segundo envío.
     (isDispatched && (hasOpenMissing || pendingShipment.length > 0));
-  // Cerrado, esperando el pistoleo que lo saca de planta. Es lo que separa
-  // "listo en el andén" de "ya viajando": el botón deja de ser cerrar y pasa
-  // a ser despachar.
+  // Cerrado, esperando el pistoleo que lo saca de planta en el módulo
+  // Despacho — ya no se despacha desde este panel.
   const isClosed = order.status === "COMPLETADA" || isIncomplete;
-  const canDispatch = isClosed || (isDispatched && pendingShipment.length > 0);
+  const isAwaitingDispatch = isClosed || (isDispatched && pendingShipment.length > 0);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [code, setCode] = useState("");
@@ -89,7 +87,6 @@ export function PackingPanel({
   const scan = usePackingScan(order.id);
   const resolve = useResolveMissingItem(order.id);
   const finish = useFinishPacking(order.id);
-  const dispatch = useDispatchOrder(order.id);
 
   if (!canPack || !isPackingStage) return null;
 
@@ -273,55 +270,22 @@ export function PackingPanel({
         </div>
       )}
 
-      {canDispatch ? (
-        <>
-          <Button
-            size="lg"
-            className="h-12 w-full text-lg sm:w-auto sm:self-start sm:px-8"
-            disabled={dispatch.isPending}
-            onClick={async () => {
-              try {
-                await dispatch.mutateAsync({ note: "" });
-                toast[isIncomplete ? "warning" : "success"](
-                  isDispatched
-                    ? "Prenda despachada a faena en envío aparte."
-                    : isIncomplete
-                      ? "Morral despachado a faena con prendas faltantes pendientes."
-                      : "Morral despachado a faena.",
-                );
-              } catch (error) {
-                toast.error(parseApiError(error).detail);
-              }
-            }}
-          >
-            {isDispatched ? "Despachar prenda a faena" : "Despachar a faena"}
-          </Button>
-          <p className="text-sm text-muted-foreground">
-            {isDispatched ? (
-              <>
-                El morral ya viajó sin{" "}
-                {pendingShipment.length === 1
-                  ? "esta prenda"
-                  : "estas prendas"}
-                . Al despacharla sale en su propio envío, que se registra en
-                faena como una llegada aparte.
-              </>
-            ) : (
-              <>
-                El morral está cerrado y sigue en planta. Al despacharlo la OT
-                pasa a <strong>Despachada</strong> y recién ahí se puede
-                registrar su llegada a faena.
-                {isIncomplete && (
-                  <>
-                    {" "}
-                    Sale con la prenda faltante anotada; si aparece después, se
-                    resuelve pistoleándola y viaja en un segundo envío.
-                  </>
-                )}
-              </>
-            )}
-          </p>
-        </>
+      {isAwaitingDispatch ? (
+        <p className="text-sm text-muted-foreground">
+          {isDispatched ? (
+            <>
+              El morral ya viajó sin{" "}
+              {pendingShipment.length === 1 ? "esta prenda" : "estas prendas"}.
+              Envíala desde el módulo <strong>Despacho</strong>, pistoleando
+              esta misma boleta.
+            </>
+          ) : (
+            <>
+              El morral está cerrado y sigue en planta. Despáchalo desde el
+              módulo <strong>Despacho</strong>, pistoleando esta boleta.
+            </>
+          )}
+        </p>
       ) : (
         <>
           <Button
