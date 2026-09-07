@@ -64,6 +64,7 @@ export function CompanySelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          aria-label={placeholder}
           disabled={disabled}
           className="w-full justify-between font-normal"
         >
