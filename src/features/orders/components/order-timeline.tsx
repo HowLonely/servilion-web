@@ -38,6 +38,25 @@ function packagingDelayNote(order: LaundryOrderOut): string | null {
   } después.`;
 }
 
+// El cierre del empaque (2º disparo de la boleta) tiene dos salidas —
+// COMPLETADA o INCOMPLETA— y cada una escribe su propio timestamp
+// (`packed_at` / `incomplete_at`, ver `finish_packing`). El hito "Empaquetado"
+// ocurrió en ambos casos: si solo mira `packed_at` promete "Pendiente" un
+// paso que ya pasó, solo que con una discrepancia.
+function packedAt(order: LaundryOrderOut): string | null | undefined {
+  return order.packed_at ?? order.incomplete_at;
+}
+
+function packedDescription(order: LaundryOrderOut): string {
+  if (order.packed_at) {
+    return packagingDelayNote(order) ?? "Morral limpio validado prenda por prenda.";
+  }
+  if (order.incomplete_at) {
+    return "Morral cerrado incompleto al empacar; falta resolver el faltante.";
+  }
+  return "Morral limpio validado prenda por prenda.";
+}
+
 // Actualizaciones que el sistema registra sobre la guía. No se mezclan con
 // los estados internos (RECIBIDA, EN_REVISION, etc.): estos son los hitos que
 // se muestran al usuario como historial. "Recepcionado en Faena" es repetible
@@ -87,10 +106,9 @@ function milestonesOf(order: LaundryOrderOut): TimelineEntry[] {
     {
       key: "packed",
       label: "Empaquetado",
-      description:
-        packagingDelayNote(order) ?? "Morral limpio validado prenda por prenda.",
-      at: order.packed_at,
-      dot: "bg-indigo-500",
+      description: packedDescription(order),
+      at: packedAt(order),
+      dot: order.packed_at ? "bg-indigo-500" : "bg-amber-500",
     },
   ];
 
