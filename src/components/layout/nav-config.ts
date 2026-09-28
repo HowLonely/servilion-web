@@ -1,5 +1,7 @@
 import {
+  ArrowLeftRight,
   BedDouble,
+  ClipboardCheck,
   Building2,
   ClipboardList,
   Contact,
@@ -7,7 +9,6 @@ import {
   GaugeCircle,
   LayoutDashboard,
   PackageCheck,
-  PackagePlus,
   Settings,
   Shirt,
   Tent,
@@ -61,6 +62,8 @@ export const ROLE_LABELS: Record<string, string> = {
 //   POST /api/orders/{id}/clean-reception    → SUPERVISOR
 //   POST /api/orders/{id}/deliver            → SUPERVISOR
 //   PUT  /api/weighing/settings              → ADMIN
+//   POST /api/hospitality/counts             → ADMIN
+//   POST /api/hospitality/movements/{id}/void → ADMIN
 //   clientes · empresas · trabajadores · prendas · facturación · conflictos → ADMIN
 
 /** Digitalizar la OT física al recibir la ropa sucia. */
@@ -106,6 +109,10 @@ export const canDispatch = (role: string | undefined): boolean =>
 
 export const canRunFieldFlow = (role: string | undefined): boolean =>
   hasRole(role, FIELD_FLOW_ROLES);
+
+/** Conteo de inventario y anulación de movimientos de lencería. */
+export const canManageLinenStock = (role: string | undefined): boolean =>
+  hasRole(role, ADMIN_ROLES);
 
 // --- Navegación ---
 
@@ -171,25 +178,32 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     // Grupo aparte y no un ítem más de "Operación": hotelería es otro servicio,
-    // no otra pantalla del mismo. Lo que entra es lencería a granel del
-    // campamento —sin trabajador, sin habitación y sin entrega individual—, así
-    // que separarlo en el menú evita que alguien busque un morral aquí o
-    // registre sábanas como si fueran la ropa de una persona.
+    // no otra pantalla del mismo. La lencería es un stock rotativo del cliente
+    // —sin trabajador, sin habitación y sin entrega individual— que se controla
+    // por campamento. El despacho se registra en la terminal de la planta y el
+    // reparto y retiro en la app móvil; aquí se consulta y se corrige.
     label: "Hotelería",
     items: [
       {
         href: "/hospitality",
-        label: "Lotes de lencería",
+        label: "Saldos de lencería",
         icon: BedDouble,
-        description: "Cargas de lencería del campamento y su merma",
+        description: "Lencería de cada cliente por campamento, bodega de faena y Servilion",
         roles: OPERATIONS_ROLES,
       },
       {
-        href: "/hospitality/new",
-        label: "Recibir carga",
-        icon: PackagePlus,
-        description: "Registrar la llegada de lencería sucia del campamento",
-        roles: DIGITIZE_ROLES,
+        href: "/hospitality/movements",
+        label: "Movimientos",
+        icon: ArrowLeftRight,
+        description: "Despachos, repartos, retiros y conteos de lencería",
+        roles: OPERATIONS_ROLES,
+      },
+      {
+        href: "/hospitality/count",
+        label: "Conteo de inventario",
+        icon: ClipboardCheck,
+        description: "Carga inicial y reajustes del saldo de lencería",
+        roles: ADMIN_ROLES,
       },
     ],
   },

@@ -41,6 +41,7 @@ function defaultValuesFor(garment?: GarmentTypeOut): GarmentFormValues {
     code: garment?.code ?? "",
     name: garment?.name ?? "",
     is_active: garment?.is_active ?? true,
+    is_linen: garment?.is_linen ?? false,
   };
 }
 
@@ -112,6 +113,20 @@ export function GarmentFormDialog({
                 <FieldError errors={[errors.name]} />
               </FieldContent>
             </Field>
+            <label className="flex cursor-pointer items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                {...register("is_linen")}
+                className="mt-0.5 size-4 accent-primary"
+              />
+              <span>
+                <span className="font-medium">Se usa en hotelería</span>
+                <span className="block text-muted-foreground">
+                  Aparece en el despacho, reparto, retiro y conteo de lencería.
+                  No la quita de las guías de trabajadores.
+                </span>
+              </span>
+            </label>
           </FieldGroup>
           <DialogFooter className="mt-4">
             <Button type="submit" disabled={isSubmitting}>

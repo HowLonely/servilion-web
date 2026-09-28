@@ -5,14 +5,14 @@ import { parseApiError } from "@/lib/api/errors";
 
 import type { components } from "@/lib/api/schema";
 
-type LinenBatchOut = components["schemas"]["LinenBatchOut"];
-type LinenBatchIn = components["schemas"]["LinenBatchIn"];
-type ReturnCountIn = components["schemas"]["ReturnCountIn"];
+type CountIn = components["schemas"]["CountIn"];
+type LinenMovementOut = components["schemas"]["LinenMovementOut"];
 
-export type BatchFilters = {
-  status?: string;
+export type MovementFilters = {
   company_id?: number;
-  search?: string;
+  camp_id?: number;
+  kind?: string;
+  include_voided?: boolean;
   date_from?: string;
   date_to?: string;
   limit?: number;
@@ -21,20 +21,36 @@ export type BatchFilters = {
 
 export const hospitalityKeys = {
   all: ["hospitality"] as const,
-  list: (filters: BatchFilters) => ["hospitality", "list", filters] as const,
-  detail: (id: number) => ["hospitality", "detail", id] as const,
-  note: (id: number) => ["hospitality", "note", id] as const,
-  counters: ["hospitality", "counters"] as const,
+  balances: ["hospitality", "balances"] as const,
+  movements: (filters: MovementFilters) => ["hospitality", "movements", filters] as const,
 };
 
-export const BATCHES_PAGE_SIZE = 25;
+export const MOVEMENTS_PAGE_SIZE = 25;
 
-export function useBatches(filters: BatchFilters) {
+/**
+ * Saldo de lencería de todos los clientes de hotelería.
+ *
+ * Se pide completo y no por cliente: los contratos de hotelería son un puñado,
+ * y con una sola respuesta alcanza para la tabla de saldos, los selectores de
+ * cliente y lugar del conteo, y el catálogo de tipos de cada cliente.
+ */
+export function useBalances() {
   return useQuery({
-    queryKey: hospitalityKeys.list(filters),
+    queryKey: hospitalityKeys.balances,
     queryFn: async () => {
-      const { data, error } = await api.GET("/api/hospitality/", {
-        params: { query: { limit: BATCHES_PAGE_SIZE, ...filters } },
+      const { data, error } = await api.GET("/api/hospitality/balances");
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function useMovements(filters: MovementFilters) {
+  return useQuery({
+    queryKey: hospitalityKeys.movements(filters),
+    queryFn: async () => {
+      const { data, error } = await api.GET("/api/hospitality/movements", {
+        params: { query: { limit: MOVEMENTS_PAGE_SIZE, ...filters } },
       });
       if (error) throw error;
       return data;
@@ -43,51 +59,13 @@ export function useBatches(filters: BatchFilters) {
   });
 }
 
-export function useBatch(batchId: number | undefined) {
-  return useQuery({
-    queryKey: hospitalityKeys.detail(batchId ?? -1),
-    queryFn: async () => {
-      const { data, error } = await api.GET("/api/hospitality/{batch_id}", {
-        params: { path: { batch_id: batchId! } },
-      });
-      if (error) throw error;
-      return data;
-    },
-    enabled: batchId !== undefined,
-  });
-}
-
-export function useBatchNote(batchId: number) {
-  return useQuery({
-    queryKey: hospitalityKeys.note(batchId),
-    queryFn: async () => {
-      const { data, error } = await api.GET("/api/hospitality/{batch_id}/note", {
-        params: { path: { batch_id: batchId } },
-      });
-      if (error) throw error;
-      return data;
-    },
-  });
-}
-
-export function useHospitalityCounters() {
-  return useQuery({
-    queryKey: hospitalityKeys.counters,
-    queryFn: async () => {
-      const { data, error } = await api.GET("/api/hospitality/counters");
-      if (error) throw error;
-      return data;
-    },
-  });
-}
-
-export function useCreateBatch() {
+export function useRegisterCount() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (body: LinenBatchIn) => {
-      const { data, error } = await api.POST("/api/hospitality/", { body });
+    mutationFn: async (body: CountIn) => {
+      const { data, error } = await api.POST("/api/hospitality/counts", { body });
       if (error) throw parseApiError(error);
-      return data as LinenBatchOut;
+      return data as LinenMovementOut;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: hospitalityKeys.all });
@@ -95,43 +73,19 @@ export function useCreateBatch() {
   });
 }
 
-/**
- * Cuenta de salida del lote: cuántas piezas de cada tipo volvieron del lavado.
- * Es repetible mientras el lote no se despache, porque contar cientos de
- * sábanas admite corrección.
- */
-export function useRegisterReturnCount(batchId: number) {
+export function useVoidMovement() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (counts: ReturnCountIn[]) => {
-      const { data, error } = await api.POST(
-        "/api/hospitality/{batch_id}/return-count",
-        { params: { path: { batch_id: batchId } }, body: { counts } },
-      );
+    mutationFn: async ({ id, reason }: { id: number; reason: string }) => {
+      const { data, error } = await api.POST("/api/hospitality/movements/{movement_id}/void", {
+        params: { path: { movement_id: id } },
+        body: { reason },
+      });
       if (error) throw parseApiError(error);
-      return data as LinenBatchOut;
+      return data as LinenMovementOut;
     },
-    onSuccess: (batch) => {
-      queryClient.setQueryData(hospitalityKeys.detail(batchId), batch);
-      queryClient.invalidateQueries({ queryKey: hospitalityKeys.counters });
-      queryClient.invalidateQueries({ queryKey: ["hospitality", "list"] });
-    },
-  });
-}
-
-export function useDispatchBatch(batchId: number) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (body: { received_by_client: string; note: string }) => {
-      const { data, error } = await api.POST(
-        "/api/hospitality/{batch_id}/dispatch",
-        { params: { path: { batch_id: batchId } }, body },
-      );
-      if (error) throw parseApiError(error);
-      return data as LinenBatchOut;
-    },
-    onSuccess: (batch) => {
-      queryClient.setQueryData(hospitalityKeys.detail(batchId), batch);
+    onSuccess: () => {
+      // Anular cambia el historial y también los saldos.
       queryClient.invalidateQueries({ queryKey: hospitalityKeys.all });
     },
   });
