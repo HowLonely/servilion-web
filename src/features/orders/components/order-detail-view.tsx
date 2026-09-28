@@ -22,7 +22,6 @@ import { OrderStatusActions } from "@/features/orders/components/order-status-ac
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
 import { ExpressBadge } from "@/features/orders/components/express-badge";
 import { OrderTimeline } from "@/features/orders/components/order-timeline";
-import { PackingPanel } from "@/features/orders/components/packing-panel";
 import { useOrder } from "@/features/orders/hooks/use-orders";
 import { DELIVERY_FLOW_LABELS, type DeliveryFlow } from "@/features/orders/lib/status";
 import { useWorker } from "@/features/workers/hooks/use-workers";
@@ -121,7 +120,6 @@ export function OrderDetailView({ orderId }: { orderId: number }) {
             </CardContent>
           </Card>
 
-          <PackingPanel order={order} />
           <OrderFlowActions order={order} />
 
           <Card>

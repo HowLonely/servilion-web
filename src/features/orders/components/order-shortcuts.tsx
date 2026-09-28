@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  FilePlus2,
   PackageCheck,
   PackageX,
   Warehouse,
@@ -10,34 +9,17 @@ import {
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 
-// Accesos a los puntos del flujo donde el sistema realmente interviene, en el
-// orden operativo real: se ingresa la guía (ropa sucia), se empaca y valida el
-// morral limpio (resolviendo faltantes si los hay), y finalmente se confirma
-// su llegada a faena.
+// Accesos a los estados del flujo que conviene seguir desde el panel. La
+// operación de planta (digitalizar, empacar, despachar) se hace en la terminal
+// Servilion Desktop contra el servidor local; el panel web la consulta.
 const SHORTCUTS = [
-  {
-    href: "/orders/new",
-    icon: FilePlus2,
-    tone: "text-indigo-600 bg-indigo-50 dark:text-indigo-300 dark:bg-indigo-400/10",
-    title: "Digitalizar OT",
-    description:
-      "Digitaliza la OT física al recibir el morral con ropa sucia en Antofagasta.",
-  },
-  {
-    href: "/packing",
-    icon: PackageCheck,
-    tone: "text-blue-600 bg-blue-50 dark:text-blue-300 dark:bg-blue-400/10",
-    title: "Empaque y revisión",
-    description:
-      "Pistolea cada prenda del morral limpio y valida que quede completo.",
-  },
   {
     href: "/orders?status=INCOMPLETA",
     icon: PackageX,
     tone: "text-red-600 bg-red-50 dark:text-red-300 dark:bg-red-400/10",
     title: "Morrales incompletos",
     description:
-      "OT con prendas faltantes por resolver: encontrarlas o reponerlas comprando.",
+      "OT con prendas faltantes, que se resuelven en la terminal de empaque.",
   },
   {
     href: "/orders?status=COMPLETADA",
@@ -45,7 +27,7 @@ const SHORTCUTS = [
     tone: "text-sky-600 bg-sky-50 dark:text-sky-300 dark:bg-sky-400/10",
     title: "Pendientes de despacho",
     description:
-      "Morrales cerrados que siguen en planta; pistolea la boleta al cargarlos.",
+      "Morrales cerrados que siguen en planta, esperando el camión.",
   },
   {
     href: "/orders?status=DESPACHADA",

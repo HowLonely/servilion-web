@@ -5,7 +5,7 @@ import { LogOut } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/auth-provider";
-import { ROLE_LABELS } from "@/components/layout/nav-config";
+import { roleLabel } from "@/components/layout/nav-config";
 
 export function getInitials(firstName?: string, lastName?: string): string {
   const a = firstName?.trim()?.[0] ?? "";
@@ -35,7 +35,7 @@ export function SidebarUserCard() {
           {user.first_name} {user.last_name}
         </p>
         <p className="truncate text-xs text-muted-foreground">
-          {ROLE_LABELS[user.role] ?? user.role}
+          {roleLabel(user)}
         </p>
       </div>
       <Button

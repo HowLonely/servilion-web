@@ -24,7 +24,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
     <nav className="flex flex-col gap-5">
       {NAV_GROUPS.map((group) => {
         const items = group.items.filter((item) =>
-          isNavItemVisible(item, user?.role),
+          isNavItemVisible(item, user),
         );
         if (items.length === 0) return null;
 

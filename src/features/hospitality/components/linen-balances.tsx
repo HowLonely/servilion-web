@@ -67,7 +67,7 @@ export function LinenBalances() {
 
 function CompanyBalance({ company }: { company: CompanyBalanceOut }) {
   const { user } = useAuth();
-  const canCount = canManageLinenStock(user?.role);
+  const canCount = canManageLinenStock(user);
 
   const camps = company.locations.filter((row) => row.kind === LOCATION_KINDS.CAMP);
   const faena = company.locations.find((row) => row.kind === LOCATION_KINDS.FAENA);
