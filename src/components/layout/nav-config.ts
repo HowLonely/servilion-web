@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   PackageCheck,
   PackagePlus,
+  Settings,
   Shirt,
   Tent,
   TriangleAlert,
@@ -59,6 +60,7 @@ export const ROLE_LABELS: Record<string, string> = {
 //   POST /api/orders/{id}/incomplete/resolve → DIGITADOR_EMPAQUE, SUPERVISOR
 //   POST /api/orders/{id}/clean-reception    → SUPERVISOR
 //   POST /api/orders/{id}/deliver            → SUPERVISOR
+//   PUT  /api/weighing/settings              → ADMIN
 //   clientes · empresas · trabajadores · prendas · facturación · conflictos → ADMIN
 
 /** Digitalizar la OT física al recibir la ropa sucia. */
@@ -251,6 +253,13 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Conflictos de sincronización",
         icon: TriangleAlert,
         description: "Divergencias entre la app en terreno y el servidor",
+        roles: ADMIN_ROLES,
+      },
+      {
+        href: "/settings",
+        label: "Configuración",
+        icon: Settings,
+        description: "Parámetros operativos, como el cupo mensual de cargos express",
         roles: ADMIN_ROLES,
       },
     ],

@@ -20,6 +20,7 @@ import { OrderNumberLabel } from "@/features/orders/components/order-number-labe
 import { OrderPhoto } from "@/features/orders/components/order-photo";
 import { OrderStatusActions } from "@/features/orders/components/order-status-actions";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
+import { ExpressBadge } from "@/features/orders/components/express-badge";
 import { OrderTimeline } from "@/features/orders/components/order-timeline";
 import { PackingPanel } from "@/features/orders/components/packing-panel";
 import { useOrder } from "@/features/orders/hooks/use-orders";
@@ -70,6 +71,7 @@ export function OrderDetailView({ orderId }: { orderId: number }) {
         <div className="flex items-center gap-2">
           <Badge variant="secondary">{flowLabel}</Badge>
           <OrderStatusBadge status={order.status} />
+          <ExpressBadge serviceType={order.service_type} />
           <Button variant="outline" size="sm" asChild>
             <Link href={`/orders/${order.id}/labels`}>
               <Tags className="size-4" />

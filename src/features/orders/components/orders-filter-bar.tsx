@@ -22,6 +22,7 @@ import {
 export type OrdersFilterState = {
   search?: string;
   status?: string;
+  serviceType?: string;
   clientId?: number;
   companyId?: number;
   workerId?: number;
@@ -87,6 +88,27 @@ export function OrdersFilterBar({
                 {ORDER_STATUS_LABELS[status]}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="text-xs text-muted-foreground">Tipo de cargo</label>
+        <Select
+          value={value.serviceType ?? "__all__"}
+          onValueChange={(serviceType: string) =>
+            onChange({
+              ...value,
+              serviceType: serviceType === "__all__" ? undefined : serviceType,
+            })
+          }
+        >
+          <SelectTrigger className="w-36">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__all__">Todos</SelectItem>
+            <SelectItem value="NORMAL">Normal</SelectItem>
+            <SelectItem value="EXPRESS">Express</SelectItem>
           </SelectContent>
         </Select>
       </div>

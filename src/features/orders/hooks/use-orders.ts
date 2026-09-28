@@ -13,6 +13,7 @@ type AmbiguousReferenceOut = components["schemas"]["AmbiguousReferenceOut"];
 
 export type OrderFilters = {
   status?: string;
+  service_type?: string;
   company_id?: number;
   client_id?: number;
   worker_id?: number;

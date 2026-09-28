@@ -17,6 +17,7 @@ import {
 import { formatDate } from "@/lib/date";
 import { OrderNumberLabel } from "@/features/orders/components/order-number-label";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
+import { ExpressBadge } from "@/features/orders/components/express-badge";
 import {
   ORDERS_PAGE_SIZE,
   useOrders,
@@ -92,7 +93,10 @@ export function OrdersTable({ filters }: { filters: OrderFilters }) {
                 </TableCell>
                 <TableCell>{formatDate(order.received_at)}</TableCell>
                 <TableCell>
-                  <OrderStatusBadge status={order.status} />
+                  <div className="flex items-center gap-1.5">
+                    <OrderStatusBadge status={order.status} />
+                    <ExpressBadge serviceType={order.service_type} />
+                  </div>
                 </TableCell>
                 <TableCell>{order.garment_count}</TableCell>
               </TableRow>

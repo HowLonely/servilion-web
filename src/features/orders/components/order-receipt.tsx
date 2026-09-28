@@ -57,8 +57,15 @@ export function OrderReceipt({ orderId }: { orderId: number }) {
           {/* Cabecera: emisor a la izquierda, cliente a la derecha */}
           <div className="flex items-center justify-between gap-4 border-b border-black px-5 py-2.5">
             <div className="min-w-0">
-              <p className="text-lg leading-none font-black tracking-[0.2em] uppercase">
+              <p className="flex items-center gap-2 text-lg leading-none font-black tracking-[0.2em] uppercase">
                 Servilion
+                {/* Invertido y no solo en negrita: en faena se tiene que ver de
+                    lejos que este morral es prioritario. */}
+                {receipt.service_type === "EXPRESS" && (
+                  <span className="bg-black px-1.5 py-0.5 text-sm tracking-[0.15em] text-white [print-color-adjust:exact]">
+                    Express
+                  </span>
+                )}
               </p>
               <p className="mt-1 text-[10px] leading-none text-neutral-600">
                 Lavandería industrial · 055-2547343 ·
