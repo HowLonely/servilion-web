@@ -16,6 +16,7 @@ import { canPack as roleCanPack } from "@/components/layout/nav-config";
 import { CompanyLogo } from "@/features/companies/components/company-logo";
 import { OrderNumberLabel } from "@/features/orders/components/order-number-label";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
+import { ExpressBadge } from "@/features/orders/components/express-badge";
 import { PackingPanel } from "@/features/orders/components/packing-panel";
 import {
   isAmbiguousReference,
@@ -272,6 +273,7 @@ export function PackingStation() {
                     OT <OrderNumberLabel value={order.order_number} />
                   </h2>
                   <OrderStatusBadge status={order.status} />
+                  <ExpressBadge serviceType={order.service_type} />
                 </div>
                 <p className="mt-1 text-base text-muted-foreground">
                   {order.worker_name} · {order.company_name} · Ref{" "}

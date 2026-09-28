@@ -49,6 +49,7 @@ export function OrdersPageClient() {
         filters={{
           search: filters.search,
           status: filters.status,
+          service_type: filters.serviceType,
           client_id: filters.clientId,
           company_id: filters.companyId,
           worker_id: filters.workerId,

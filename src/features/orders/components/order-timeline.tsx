@@ -3,6 +3,7 @@ import { es } from "date-fns/locale";
 
 import { cn } from "@/lib/utils";
 import { formatDateTime } from "@/lib/date";
+import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
 
 import type { components } from "@/lib/api/schema";
 
@@ -21,6 +22,13 @@ type TimelineEntry = {
    * línea de tiempo promete un paso que no va a llegar.
    */
   notApplicable?: string;
+  /**
+   * Estados en que este paso dejó la guía, en orden. Se muestran como badge
+   * solo cuando el paso ya ocurrió, para que se lea qué cambió en cada nodo.
+   * Vacío en los pasos que no mueven el estado (el pesaje, la recepción del
+   * limpio en faena).
+   */
+  statuses?: string[];
 };
 
 function packagingDelayNote(order: LaundryOrderOut): string | null {
@@ -55,6 +63,15 @@ function packedDescription(order: LaundryOrderOut): string {
     return "Morral cerrado incompleto al empacar; falta resolver el faltante.";
   }
   return "Morral limpio validado prenda por prenda.";
+}
+
+// El cierre del empaque deja la guía Completa o Incompleta. Si cerró incompleta
+// y el faltante se resolvió después, pasó por los dos: se muestran en orden.
+function packedStatuses(order: LaundryOrderOut): string[] {
+  const statuses: string[] = [];
+  if (order.incomplete_at) statuses.push("INCOMPLETA");
+  if (order.packed_at) statuses.push("COMPLETADA");
+  return statuses;
 }
 
 // Actualizaciones que el sistema registra sobre la guía. No se mezclan con
@@ -97,11 +114,14 @@ function milestonesOf(order: LaundryOrderOut): TimelineEntry[] {
           : undefined,
     },
     {
+      // Es el momento en que se digitaliza la OT: ahí nace la guía en el
+      // sistema y queda Recibida.
       key: "laundry",
-      label: "Recepcionado en Lavandería",
-      description: "Morral con ropa sucia recibido en planta.",
+      label: "Digitalizado",
+      description: "OT digitalizada en planta: la guía queda registrada en el sistema.",
       at: order.laundry_received_at,
       dot: "bg-blue-500",
+      statuses: ["RECIBIDA"],
     },
     {
       key: "packed",
@@ -109,6 +129,7 @@ function milestonesOf(order: LaundryOrderOut): TimelineEntry[] {
       description: packedDescription(order),
       at: packedAt(order),
       dot: order.packed_at ? "bg-indigo-500" : "bg-amber-500",
+      statuses: packedStatuses(order),
     },
   ];
 
@@ -118,6 +139,7 @@ function milestonesOf(order: LaundryOrderOut): TimelineEntry[] {
     description: "Morral cerrado, cargado y en tránsito hacia faena.",
     at: order.dispatched_at,
     dot: "bg-sky-500",
+    statuses: ["DESPACHADA"],
   });
 
   if (order.clean_receptions.length > 0) {
@@ -151,6 +173,7 @@ function milestonesOf(order: LaundryOrderOut): TimelineEntry[] {
       description: "Entrega confirmada al trabajador.",
       at: order.delivered_at,
       dot: "bg-emerald-500",
+      statuses: ["ENTREGADA"],
     });
   }
 
@@ -210,6 +233,14 @@ export function OrderTimeline({ order }: { order: LaundryOrderOut }) {
               >
                 {milestone.label}
               </span>
+              {reached && (milestone.statuses ?? []).length > 0 && (
+                <span className="flex flex-wrap items-center gap-1.5 py-0.5">
+                  <span className="text-xs text-muted-foreground">Estado:</span>
+                  {milestone.statuses!.map((status) => (
+                    <OrderStatusBadge key={status} status={status} />
+                  ))}
+                </span>
+              )}
               <span className="text-xs text-muted-foreground">
                 {skipped ? milestone.notApplicable : milestone.description}
               </span>

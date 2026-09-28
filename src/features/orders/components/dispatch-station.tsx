@@ -14,6 +14,7 @@ import { canDispatch as roleCanDispatch } from "@/components/layout/nav-config";
 import { CompanyLogo } from "@/features/companies/components/company-logo";
 import { OrderNumberLabel } from "@/features/orders/components/order-number-label";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
+import { ExpressBadge } from "@/features/orders/components/express-badge";
 import {
   isAmbiguousReference,
   useDispatchOrder,
@@ -190,6 +191,7 @@ export function DispatchStation() {
                   OT <OrderNumberLabel value={lastOrder.order_number} />
                 </h2>
                 <OrderStatusBadge status={lastOrder.status} />
+                <ExpressBadge serviceType={lastOrder.service_type} />
               </div>
               <p className="mt-1 text-base text-muted-foreground">
                 {lastOrder.worker_name} · {lastOrder.company_name} · Ref{" "}
