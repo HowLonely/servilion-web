@@ -10,6 +10,7 @@ type GarmentTypeIn = components["schemas"]["GarmentTypeIn"];
 
 export type GarmentFilters = {
   is_active?: boolean;
+  is_linen?: boolean;
   limit?: number;
   offset?: number;
 };

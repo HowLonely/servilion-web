@@ -69,6 +69,7 @@ export function GarmentsTable() {
             <TableRow>
               <TableHead>Código</TableHead>
               <TableHead>Nombre</TableHead>
+              <TableHead>Uso</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead className="w-24" />
             </TableRow>
@@ -77,14 +78,14 @@ export function GarmentsTable() {
             {isLoading &&
               Array.from({ length: 4 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={4}>
+                  <TableCell colSpan={5}>
                     <Skeleton className="h-6 w-full" />
                   </TableCell>
                 </TableRow>
               ))}
             {!isLoading && garments?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground">
+                <TableCell colSpan={5} className="text-center text-muted-foreground">
                   No se encontraron prendas.
                 </TableCell>
               </TableRow>
@@ -127,6 +128,9 @@ function GarmentRow({
     <TableRow>
       <TableCell className="font-medium">{garment.code}</TableCell>
       <TableCell>{garment.name}</TableCell>
+      <TableCell>
+        {garment.is_linen && <Badge variant="secondary">Hotelería</Badge>}
+      </TableCell>
       <TableCell>
         <Badge variant={garment.is_active ? "outline" : "secondary"}>
           {garment.is_active ? "Activa" : "Inactiva"}
