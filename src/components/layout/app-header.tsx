@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/lib/auth/auth-provider";
 import {
-  ROLE_LABELS,
+  roleLabel,
   findActiveNavItem,
 } from "@/components/layout/nav-config";
 import { MobileNav } from "@/components/layout/mobile-nav";
@@ -62,7 +62,7 @@ export function AppHeader() {
                     {user.first_name} {user.last_name}
                   </span>
                   <span className="text-xs font-normal text-muted-foreground">
-                    {ROLE_LABELS[user.role] ?? user.role}
+                    {roleLabel(user)}
                   </span>
                 </span>
               </Button>

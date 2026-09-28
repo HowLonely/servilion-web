@@ -5,114 +5,66 @@ import {
   Building2,
   ClipboardList,
   Contact,
-  FilePlus2,
   GaugeCircle,
+  KeyRound,
   LayoutDashboard,
-  PackageCheck,
   Settings,
   Shirt,
   Tent,
   TriangleAlert,
-  Truck,
+  UserCog,
   Users,
   type LucideIcon,
 } from "lucide-react";
 
-// Los cinco roles del backend (`authentication/models.py::User.Role`), no solo
-// los que tienen pantalla acá. PESAJE es el caso raro: su estación es física
-// —una balanza, una pantalla táctil y una etiquetera— y vive solo en
-// `servilion-desktop`, así que no aparece en ningún ítem de navegación. Aun así
-// tiene que estar en este tipo: sin él la app no sabía nombrar su propio rol y
-// lo dejaba entrar a un Panel vacío que solo respondía 403.
-export type StaffRole =
-  | "ADMIN"
-  | "SUPERVISOR"
-  | "PESAJE"
-  | "DIGITADOR_OT"
-  | "DIGITADOR_EMPAQUE";
+import type { components } from "@/lib/api/schema";
 
-export const ROLE_LABELS: Record<string, string> = {
-  ADMIN: "Administrador",
-  SUPERVISOR: "Supervisor",
-  PESAJE: "Pesaje",
-  DIGITADOR_OT: "Digitador de OT",
-  DIGITADOR_EMPAQUE: "Digitador de Empaque",
-};
+type UserOut = components["schemas"]["UserOut"];
 
-// --- Capacidades ---
+// --- Permisos ---
 //
 // ESTAS CONSTANTES SON LA ÚNICA FUENTE DE VERDAD de los permisos en el cliente.
-// Los ítems de navegación de más abajo las referencian en vez de repetir listas
-// de roles a mano, y los componentes que habilitan acciones (`packing-station`,
-// `packing-panel`, `order-flow-actions`) importan los helpers `canX` de aquí.
+// Los roles ya no son fijos: cada rol es una lista de permisos que se edita en
+// Configuración → Roles, y `/api/auth/me` devuelve los del usuario
+// (`user.permissions`). Los códigos son los de
+// `servilion-backend/authentication/permissions.py::Perm`; la terminal de
+// escritorio usa los mismos.
 //
-// Antes cada archivo llevaba su propia lista y se desincronizaron: el menú
-// ofrecía "Digitalizar OT" a LAVANDERIA y "Empaque" a SUPERVISOR, y ambos
-// recibían 403 al intentar la acción. Si vuelve a hacer falta una lista de
-// roles, se agrega aquí y se importa; no se copia.
+// Ocultar un ítem no es la defensa: el backend exige el mismo permiso en el
+// endpoint. Esto solo evita ofrecer una pantalla que va a responder 403.
 //
-// Debe reflejar exactamente lo que exige el backend (decoradores
-// `@require_roles` / `@require_admin`; ADMIN atraviesa toda restricción):
-//
-//   POST /api/orders/                        → DIGITADOR_OT, SUPERVISOR
-//   POST /api/orders/{id}/packing/scan       → DIGITADOR_EMPAQUE, SUPERVISOR
-//   POST /api/orders/{id}/packing/finish     → DIGITADOR_EMPAQUE, SUPERVISOR
-//   POST /api/orders/{id}/dispatch           → DIGITADOR_EMPAQUE, SUPERVISOR
-//   POST /api/orders/{id}/incomplete/resolve → DIGITADOR_EMPAQUE, SUPERVISOR
-//   POST /api/orders/{id}/clean-reception    → SUPERVISOR
-//   POST /api/orders/{id}/deliver            → SUPERVISOR
-//   PUT  /api/weighing/settings              → ADMIN
-//   POST /api/hospitality/counts             → ADMIN
-//   POST /api/hospitality/movements/{id}/void → ADMIN
-//   clientes · empresas · trabajadores · prendas · facturación · conflictos → ADMIN
+// Pesaje, digitalización, empaque y despachos no tienen pantalla aquí: se
+// hacen en la terminal de planta contra el servidor local, y la nube los
+// rechaza (409) para que no haya dos lugares emitiendo refs o cerrando el
+// mismo morral.
+export const PERM = {
+  fieldOrders: "field.orders",
+  reports: "reports.view",
+  linenView: "hospitality.view",
+  linenManage: "hospitality.manage",
+  catalog: "catalog.manage",
+  workers: "workers.manage",
+  settings: "settings.manage",
+  users: "users.manage",
+  sync: "sync.manage",
+} as const;
 
-/** Digitalizar la OT física al recibir la ropa sucia. */
-export const DIGITIZE_ROLES: StaffRole[] = ["ADMIN", "SUPERVISOR", "DIGITADOR_OT"];
+type MaybeUser = Pick<UserOut, "permissions"> | null | undefined;
 
-/** Pistolear y validar el morral limpio al empacarlo. */
-export const PACKING_ROLES: StaffRole[] = [
-  "ADMIN",
-  "SUPERVISOR",
-  "DIGITADOR_EMPAQUE",
-];
-
-// Mismos roles que empaque: el backend exige lo mismo para /dispatch que para
-// /scan/packing, aunque viven en pantallas distintas del panel.
-/** Pistolear la boleta de un morral cerrado para sacarlo de planta. */
-export const DISPATCH_ROLES: StaffRole[] = [
-  "ADMIN",
-  "SUPERVISOR",
-  "DIGITADOR_EMPAQUE",
-];
-
-/** Hitos físicos en faena: recepción del morral limpio y entrega en habitación. */
-export const FIELD_FLOW_ROLES: StaffRole[] = ["ADMIN", "SUPERVISOR"];
-
-/** Vista general de la operación: panel, listado de OT y torre de control. */
-export const OPERATIONS_ROLES: StaffRole[] = ["ADMIN", "SUPERVISOR"];
-
-/** Catálogo y dinero. Es lo único que separa a ADMIN de SUPERVISOR. */
-export const ADMIN_ROLES: StaffRole[] = ["ADMIN"];
-
-function hasRole(role: string | undefined, allowed: StaffRole[]): boolean {
-  return role !== undefined && allowed.includes(role as StaffRole);
+export function hasPermission(user: MaybeUser, permission: string): boolean {
+  return user?.permissions?.includes(permission) ?? false;
 }
 
-export const canDigitize = (role: string | undefined): boolean =>
-  hasRole(role, DIGITIZE_ROLES);
-
-export const canPack = (role: string | undefined): boolean =>
-  hasRole(role, PACKING_ROLES);
-
-export const canDispatch = (role: string | undefined): boolean =>
-  hasRole(role, DISPATCH_ROLES);
-
-export const canRunFieldFlow = (role: string | undefined): boolean =>
-  hasRole(role, FIELD_FLOW_ROLES);
+/** Hitos físicos en faena: recepción del morral limpio y entrega en habitación. */
+export const canRunFieldFlow = (user: MaybeUser): boolean => hasPermission(user, PERM.fieldOrders);
 
 /** Conteo de inventario y anulación de movimientos de lencería. */
-export const canManageLinenStock = (role: string | undefined): boolean =>
-  hasRole(role, ADMIN_ROLES);
+export const canManageLinenStock = (user: MaybeUser): boolean => hasPermission(user, PERM.linenManage);
+
+/** Nombre visible del rol del usuario. */
+export function roleLabel(user: Pick<UserOut, "role" | "role_name"> | null | undefined): string {
+  return user?.role_name || user?.role || "";
+}
 
 // --- Navegación ---
 
@@ -122,7 +74,8 @@ export type NavItem = {
   icon: LucideIcon;
   /** Texto corto de apoyo para tooltips y navegación móvil. */
   description?: string;
-  roles?: StaffRole[]; // si se omite, visible para todos los roles
+  /** Visible con cualquiera de estos permisos. Si se omite, visible para todos. */
+  permissions?: string[];
 };
 
 export type NavGroup = {
@@ -139,7 +92,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Panel",
         icon: LayoutDashboard,
         description: "Resumen operativo del día",
-        roles: OPERATIONS_ROLES,
+        permissions: [PERM.reports],
       },
     ],
   },
@@ -151,28 +104,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Órdenes de trabajo",
         icon: ClipboardList,
         description: "Órdenes de lavado y su estado",
-        roles: OPERATIONS_ROLES,
-      },
-      {
-        href: "/orders/new",
-        label: "Digitalizar OT",
-        icon: FilePlus2,
-        description: "Digitalizar la OT al recibir ropa sucia en Antofagasta",
-        roles: DIGITIZE_ROLES,
-      },
-      {
-        href: "/packing",
-        label: "Empaque y revisión",
-        icon: PackageCheck,
-        description: "Pistolear cada prenda del morral limpio y validar completitud",
-        roles: PACKING_ROLES,
-      },
-      {
-        href: "/dispatch",
-        label: "Despacho",
-        icon: Truck,
-        description: "Pistolear la boleta de un morral cerrado para sacarlo de planta",
-        roles: DISPATCH_ROLES,
+        permissions: [PERM.reports],
       },
     ],
   },
@@ -189,21 +121,21 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Saldos de lencería",
         icon: BedDouble,
         description: "Lencería de cada cliente por campamento, bodega de faena y Servilion",
-        roles: OPERATIONS_ROLES,
+        permissions: [PERM.reports, PERM.linenView],
       },
       {
         href: "/hospitality/movements",
         label: "Movimientos",
         icon: ArrowLeftRight,
         description: "Despachos, repartos, retiros y conteos de lencería",
-        roles: OPERATIONS_ROLES,
+        permissions: [PERM.reports, PERM.linenView],
       },
       {
         href: "/hospitality/count",
         label: "Conteo de inventario",
         icon: ClipboardCheck,
         description: "Carga inicial y reajustes del saldo de lencería",
-        roles: ADMIN_ROLES,
+        permissions: [PERM.linenManage],
       },
     ],
   },
@@ -215,7 +147,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Torre de control",
         icon: GaugeCircle,
         description: "Estado operativo en tiempo real y cuellos de botella",
-        roles: OPERATIONS_ROLES,
+        permissions: [PERM.reports],
       },
     ],
   },
@@ -227,35 +159,35 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Clientes",
         icon: Contact,
         description: "Clientes y su catálogo de precios (agrupan empresas)",
-        roles: ADMIN_ROLES,
+        permissions: [PERM.catalog],
       },
       {
         href: "/companies",
         label: "Empresas",
         icon: Building2,
         description: "Empresas de cada cliente",
-        roles: ADMIN_ROLES,
+        permissions: [PERM.catalog],
       },
       {
         href: "/camps",
         label: "Campamentos",
         icon: Tent,
         description: "Alojamiento de la faena y códigos QR de las puertas",
-        roles: ADMIN_ROLES,
+        permissions: [PERM.catalog],
       },
       {
         href: "/workers",
         label: "Trabajadores",
         icon: Users,
         description: "Personal en faena",
-        roles: ADMIN_ROLES,
+        permissions: [PERM.workers],
       },
       {
         href: "/garments",
         label: "Prendas",
         icon: Shirt,
         description: "Catálogo de tipos de prenda (el precio se define por cliente)",
-        roles: ADMIN_ROLES,
+        permissions: [PERM.catalog],
       },
     ],
   },
@@ -263,18 +195,32 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Sistema",
     items: [
       {
+        href: "/users",
+        label: "Usuarios",
+        icon: UserCog,
+        description: "Cuentas del staff y su rol",
+        permissions: [PERM.users],
+      },
+      {
+        href: "/roles",
+        label: "Roles y permisos",
+        icon: KeyRound,
+        description: "Qué puede hacer cada rol en la web, la terminal y la app",
+        permissions: [PERM.users],
+      },
+      {
         href: "/sync-conflicts",
-        label: "Conflictos de sincronización",
+        label: "Sincronización",
         icon: TriangleAlert,
-        description: "Divergencias entre la app en terreno y el servidor",
-        roles: ADMIN_ROLES,
+        description: "Servidor local de planta, conflictos de la app en terreno e incidencias",
+        permissions: [PERM.sync],
       },
       {
         href: "/settings",
         label: "Configuración",
         icon: Settings,
         description: "Parámetros operativos, como el cupo mensual de cargos express",
-        roles: ADMIN_ROLES,
+        permissions: [PERM.settings],
       },
     ],
   },
@@ -283,9 +229,9 @@ export const NAV_GROUPS: NavGroup[] = [
 /** Lista plana de todos los ítems, útil para resolver el título de la ruta actual. */
 export const NAV_ITEMS: NavItem[] = NAV_GROUPS.flatMap((group) => group.items);
 
-export function isNavItemVisible(item: NavItem, role: string | undefined): boolean {
-  if (!item.roles) return true;
-  return role !== undefined && item.roles.includes(role as StaffRole);
+export function isNavItemVisible(item: NavItem, user: MaybeUser): boolean {
+  if (!item.permissions) return true;
+  return item.permissions.some((permission) => hasPermission(user, permission));
 }
 
 /** Devuelve el ítem de navegación que corresponde a la ruta dada (match por prefijo). */
@@ -298,28 +244,23 @@ export function findActiveNavItem(pathname: string): NavItem | undefined {
 }
 
 /**
- * ¿Este rol tiene alguna pantalla en el panel web?
+ * ¿Este usuario tiene alguna pantalla en el panel web?
  *
- * Hoy solo `PESAJE` responde que no: su puesto es la báscula de Antofagasta y
+ * No, por ejemplo, quien solo pesa: su puesto es la báscula de Antofagasta y
  * se opera en la terminal de escritorio. Se pregunta a la navegación en vez de
- * comparar contra una lista de roles para que agregar un ítem visible para él
- * baste para que la respuesta cambie sola.
+ * comparar contra una lista de roles, así un cambio de permisos del rol cambia
+ * la respuesta solo.
  */
-export function hasWorkspace(role: string | undefined): boolean {
-  return NAV_ITEMS.some((item) => isNavItemVisible(item, role));
+export function hasWorkspace(user: MaybeUser): boolean {
+  return NAV_ITEMS.some((item) => isNavItemVisible(item, user));
 }
 
 /**
- * Primera pantalla a la que mandar al usuario tras iniciar sesión.
- *
- * Los digitadores no ven el Panel, así que enviarlos a "/" los dejaría en una
- * página vacía: se les manda directo a su estación. Se resuelve desde la propia
- * navegación para que un cambio de permisos arrastre también el destino.
- *
- * Para un rol sin pantallas devuelve "/", que es donde `DashboardHomeGuard`
- * explica que su puesto está en la terminal de escritorio.
+ * Primera pantalla a la que mandar al usuario tras iniciar sesión. Para quien
+ * no tiene pantallas devuelve "/", donde `DashboardHomeGuard` explica que su
+ * puesto está en la terminal de escritorio.
  */
-export function landingPathForRole(role: string | undefined): string {
-  const firstVisible = NAV_ITEMS.find((item) => isNavItemVisible(item, role));
+export function landingPathFor(user: MaybeUser): string {
+  const firstVisible = NAV_ITEMS.find((item) => isNavItemVisible(item, user));
   return firstVisible?.href ?? "/";
 }

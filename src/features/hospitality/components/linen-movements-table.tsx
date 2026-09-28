@@ -65,7 +65,7 @@ const ALL = "__all__";
  */
 export function LinenMovementsTable() {
   const { user } = useAuth();
-  const canVoid = canManageLinenStock(user?.role);
+  const canVoid = canManageLinenStock(user);
   const { data: balances } = useBalances();
 
   const [companyId, setCompanyId] = useState<string>(ALL);

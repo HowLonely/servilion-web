@@ -28,7 +28,7 @@ export function OrderFlowActions({ order }: { order: LaundryOrderOut }) {
   const { user } = useAuth();
   // Ambos hitos ocurren en faena y los ejecuta el supervisor: los digitadores
   // trabajan en planta y no intervienen aquí.
-  const canRunFlow = canRunFieldFlow(user?.role);
+  const canRunFlow = canRunFieldFlow(user);
 
   // Ambos hitos arrancan del despacho: hasta que el morral no sale de planta
   // no puede haber llegado a faena. Antes se aceptaba COMPLETADA/INCOMPLETA

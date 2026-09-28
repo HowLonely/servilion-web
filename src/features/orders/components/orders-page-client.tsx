@@ -1,12 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-import { Plus } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/page-header";
 import { dateInputDaysAgo, dayRangeToIsoUtc } from "@/lib/date";
 import {
@@ -30,15 +27,7 @@ export function OrdersPageClient() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Órdenes de trabajo"
-        description="Órdenes de lavado registradas. Filtra por estado, cliente, empresa o fecha."
-        actions={
-          <Button asChild>
-            <Link href="/orders/new">
-              <Plus />
-              Nueva OT
-            </Link>
-          </Button>
-        }
+        description="Órdenes de lavado registradas. Se digitalizan, empacan y despachan en la terminal de planta."
       />
 
       <OrdersFilterBar value={filters} onChange={setFilters} />
