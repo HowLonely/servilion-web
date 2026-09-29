@@ -245,7 +245,7 @@ export function CompanyFormDialog({
                 </Select>
                 <FieldError errors={[errors.service_type]} />
                 <p className="text-xs text-muted-foreground">
-                  Hotelería no opera con OT ni habitación: su lencería llega a
+                  Hotelería no opera con OT ni habitación: su hotelería llega a
                   granel y se registra como lote en el módulo de Hotelería.
                 </p>
               </FieldContent>

@@ -28,7 +28,7 @@ export const hospitalityKeys = {
 export const MOVEMENTS_PAGE_SIZE = 25;
 
 /**
- * Saldo de lencería de todos los clientes de hotelería.
+ * Saldo de hotelería de todos los clientes de hotelería.
  *
  * Se pide completo y no por cliente: los contratos de hotelería son un puñado,
  * y con una sola respuesta alcanza para la tabla de saldos, los selectores de

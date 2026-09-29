@@ -58,7 +58,7 @@ export function hasPermission(user: MaybeUser, permission: string): boolean {
 /** Hitos físicos en faena: recepción del morral limpio y entrega en habitación. */
 export const canRunFieldFlow = (user: MaybeUser): boolean => hasPermission(user, PERM.fieldOrders);
 
-/** Conteo de inventario y anulación de movimientos de lencería. */
+/** Conteo de inventario y anulación de movimientos de hotelería. */
 export const canManageLinenStock = (user: MaybeUser): boolean => hasPermission(user, PERM.linenManage);
 
 /** Nombre visible del rol del usuario. */
@@ -110,7 +110,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     // Grupo aparte y no un ítem más de "Operación": hotelería es otro servicio,
-    // no otra pantalla del mismo. La lencería es un stock rotativo del cliente
+    // no otra pantalla del mismo. La hotelería es un stock rotativo del cliente
     // —sin trabajador, sin habitación y sin entrega individual— que se controla
     // por campamento. El despacho se registra en la terminal de la planta y el
     // reparto y retiro en la app móvil; aquí se consulta y se corrige.
@@ -118,23 +118,23 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       {
         href: "/hospitality",
-        label: "Saldos de lencería",
+        label: "Saldos de hotelería",
         icon: BedDouble,
-        description: "Lencería de cada cliente por campamento, bodega de faena y Servilion",
+        description: "Hotelería de cada cliente por campamento, bodega de faena y Servilion",
         permissions: [PERM.reports, PERM.linenView],
       },
       {
         href: "/hospitality/movements",
         label: "Movimientos",
         icon: ArrowLeftRight,
-        description: "Despachos, repartos, retiros y conteos de lencería",
+        description: "Despachos, repartos, retiros y conteos de hotelería",
         permissions: [PERM.reports, PERM.linenView],
       },
       {
         href: "/hospitality/count",
         label: "Conteo de inventario",
         icon: ClipboardCheck,
-        description: "Carga inicial y reajustes del saldo de lencería",
+        description: "Carga inicial y reajustes del saldo de hotelería",
         permissions: [PERM.linenManage],
       },
     ],

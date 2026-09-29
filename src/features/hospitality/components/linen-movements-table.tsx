@@ -57,7 +57,7 @@ type LinenMovementOut = components["schemas"]["LinenMovementOut"];
 const ALL = "__all__";
 
 /**
- * Historial de movimientos de lencería. Es la fuente de los saldos: lo que no
+ * Historial de movimientos de hotelería. Es la fuente de los saldos: lo que no
  * cuadra en la tabla de saldos se explica aquí, movimiento por movimiento.
  *
  * Los anulados se muestran tachados y no desaparecen: dejan constancia de qué
@@ -135,7 +135,7 @@ export function LinenMovementsTable() {
         <Card className="flex flex-col items-center gap-3 py-12 text-center">
           <History className="size-10 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
-            No hay movimientos de lencería con estos filtros.
+            No hay movimientos de hotelería con estos filtros.
           </p>
         </Card>
       )}
@@ -150,7 +150,7 @@ export function LinenMovementsTable() {
                   <TableHead>Movimiento</TableHead>
                   <TableHead>Cliente</TableHead>
                   <TableHead>Lugar</TableHead>
-                  <TableHead>Lencería</TableHead>
+                  <TableHead>Hotelería</TableHead>
                   <TableHead className="text-right">Piezas</TableHead>
                   <TableHead>Registró</TableHead>
                   {canVoid && <TableHead className="w-24" />}

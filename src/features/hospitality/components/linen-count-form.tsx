@@ -151,7 +151,7 @@ export function LinenCountForm({
       {company && selectedRow && (
         <Card className="overflow-hidden p-0">
           <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-4 border-b bg-muted/40 px-4 py-2 text-xs font-medium text-muted-foreground">
-            <span>Lencería</span>
+            <span>Hotelería</span>
             <span className="w-24 text-right">En el sistema</span>
             <span className="w-28 text-center">Contado</span>
             <span className="w-20 text-right">Ajuste</span>

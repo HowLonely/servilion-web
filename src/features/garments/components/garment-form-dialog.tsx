@@ -122,7 +122,7 @@ export function GarmentFormDialog({
               <span>
                 <span className="font-medium">Se usa en hotelería</span>
                 <span className="block text-muted-foreground">
-                  Aparece en el despacho, reparto, retiro y conteo de lencería.
+                  Aparece en el despacho, reparto, retiro y conteo de hotelería.
                   No la quita de las guías de trabajadores.
                 </span>
               </span>

@@ -1,4 +1,4 @@
-// Tipos de movimiento de lencería, replicados desde el backend
+// Tipos de movimiento de hotelería, replicados desde el backend
 // (hospitality/models.py LinenMovement.Kind). Hotelería es un stock rotativo:
 // la planta despacha a la faena, el supervisor reparte a los campamentos y
 // retira el sucio, y el administrador fija lo contado en un lugar.

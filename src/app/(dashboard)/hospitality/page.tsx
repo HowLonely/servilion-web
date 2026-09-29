@@ -9,8 +9,8 @@ export default function HospitalityPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Saldos de lencería"
-        description="Dónde está la lencería de cada cliente de hotelería: en sus campamentos, en la bodega de faena o en poder de Servilion."
+        title="Saldos de hotelería"
+        description="Dónde está la hotelería de cada cliente de hotelería: en sus campamentos, en la bodega de faena o en poder de Servilion."
         actions={
           <Button variant="outline" asChild>
             <Link href="/hospitality/movements">

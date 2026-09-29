@@ -5,7 +5,7 @@ export default function LinenMovementsPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Movimientos de lencería"
+        title="Movimientos de hotelería"
         description="Despachos de la planta, repartos y retiros en faena y conteos de inventario. Los saldos se calculan desde aquí."
       />
       <LinenMovementsTable />

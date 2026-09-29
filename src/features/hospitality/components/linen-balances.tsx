@@ -27,7 +27,7 @@ type CompanyBalanceOut = components["schemas"]["CompanyBalanceOut"];
 type BalanceLocationOut = components["schemas"]["BalanceLocationOut"];
 
 /**
- * Dónde está la lencería de cada cliente de hotelería.
+ * Dónde está la hotelería de cada cliente de hotelería.
  *
  * Los campamentos van primero porque es el saldo que se gestiona; debajo, la
  * bodega de faena (despachado y todavía sin repartir) y lo que está en poder
@@ -38,7 +38,7 @@ export function LinenBalances() {
 
   if (isLoading) return <Skeleton className="h-72 w-full" />;
   if (error || !data) {
-    return <p className="text-destructive">No se pudieron cargar los saldos de lencería.</p>;
+    return <p className="text-destructive">No se pudieron cargar los saldos de hotelería.</p>;
   }
 
   if (data.length === 0) {
@@ -48,7 +48,7 @@ export function LinenBalances() {
         <div>
           <p className="font-semibold">No hay empresas con contrato de hotelería</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Marca una empresa con el tipo de servicio &quot;Lencería de hotelería&quot; para
+            Marca una empresa con el tipo de servicio &quot;Hotelería&quot; para
             empezar a controlar su stock.
           </p>
         </div>
@@ -130,7 +130,7 @@ function CompanyBalance({ company }: { company: CompanyBalanceOut }) {
 
       {company.linen_types.length === 0 ? (
         <Card className="p-5 text-sm text-muted-foreground">
-          No hay tipos de lencería. Marca en{" "}
+          No hay tipos de hotelería. Marca en{" "}
           <Link href="/garments" className="font-medium underline">
             Prendas
           </Link>{" "}

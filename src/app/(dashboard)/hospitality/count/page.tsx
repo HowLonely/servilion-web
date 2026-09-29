@@ -12,7 +12,7 @@ export default async function LinenCountPage({
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Conteo de inventario"
-        description="Registra cuánta lencería hay contada en un campamento o en la bodega de faena. Sirve de carga inicial y de reajuste."
+        description="Registra cuánta hotelería hay contada en un campamento o en la bodega de faena. Sirve de carga inicial y de reajuste."
       />
       <LinenCountForm
         initialCompanyId={Number.isInteger(companyId) && companyId > 0 ? companyId : undefined}

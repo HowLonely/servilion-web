@@ -9,7 +9,7 @@ export const DELIVERY_FLOWS = ["FLUJO_1", "FLUJO_2"] as const;
 
 // Qué lava el contrato, que es lo que decide con qué módulo se opera. PERSONAL
 // es la ropa de un trabajador y va como guía (con OT, habitación y entrega
-// individual); HOTELERIA es lencería a granel del campamento y va como lote en
+// individual); HOTELERIA es hotelería a granel del campamento y va como lote en
 // su propio módulo, sin persona ni destino individual.
 export const SERVICE_TYPES = ["PERSONAL", "HOTELERIA"] as const;
 
@@ -18,7 +18,7 @@ export const SERVICE_TYPE_LABELS: Record<
   string
 > = {
   PERSONAL: "Ropa de trabajador",
-  HOTELERIA: "Lencería de hotelería",
+  HOTELERIA: "Hotelería",
 };
 
 // Qué es la empresa dentro de su cliente. MANDANTE es la empresa del propio
